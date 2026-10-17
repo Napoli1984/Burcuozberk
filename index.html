@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Burcu Özberk</title>
-<meta name="description" content="Memory, Ultima carta e Puzzle con le foto di Burcu Özberk. Fan game in italiano e in turco.">
+<meta name="description" content="Memory, Ultima carta, Puzzle e Pişti con le foto di Burcu Özberk. Fan game in italiano e in turco.">
 <meta name="theme-color" content="#140f15">
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -15,7 +15,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Burcu Özberk">
 <meta property="og:title" content="Burcu Özberk">
-<meta property="og:description" content="Memory, Ultima carta e Puzzle con le foto di Burcu Özberk. Gioca da solo o con gli amici.">
+<meta property="og:description" content="Memory, Ultima carta, Puzzle e Pişti con le foto di Burcu Özberk. Gioca da solo o con gli amici.">
 <meta property="og:image" content="https://napoli1984.github.io/Burcuozberk/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -265,6 +265,8 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
 }
 .bd-photo[data-for="uc"] { object-position: 54% 10%; }
 .bd-photo[data-for="pz"] { object-position: 50% 6%; }
+.bd-photo[data-for="pi"] { object-position: 40% 8%; }
+:root[data-game="pi"] .bd-photo[data-for="pi"],
 :root:not([data-game]) .bd-photo[data-for="memory"],
 :root[data-game="memory"] .bd-photo[data-for="memory"],
 :root[data-game="uc"] .bd-photo[data-for="uc"],
@@ -300,10 +302,10 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
 /* game switch */
 .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 .game-pick { display: grid; gap: 8px; margin-top: 4px; animation: rise 1.1s .28s var(--ease-out) both; }
-.gp-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.gp-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .gp-tile {
-  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: start; align-content: start; gap: 8px;
-  min-width: 0; padding: 11px 12px 13px; border-radius: 20px; cursor: pointer; text-align: left;
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px;
+  min-width: 0; padding: 9px 14px 9px 9px; border-radius: 20px; cursor: pointer; text-align: left;
   color: var(--porcelain); border: 1px solid rgba(246, 236, 228, .16);
   background: var(--glass-soft); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
   transition: background-color .3s ease, color .3s ease, border-color .3s ease, transform .15s ease;
@@ -312,23 +314,23 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
 @media (hover: hover) { .gp-tile[aria-pressed="false"]:hover { border-color: rgba(246, 236, 228, .4); } }
 .gp-tile[aria-pressed="true"] { background: var(--porcelain); color: var(--velvet); border-color: var(--porcelain); box-shadow: 0 18px 40px -22px rgba(0, 0, 0, .9); }
 .gp-text { display: grid; gap: 3px; min-width: 0; }
-.gp-name { font-family: var(--font-display); font-style: italic; font-weight: 600; font-size: 23px; line-height: 1; text-wrap: balance; }
+.gp-name { font-family: var(--font-display); font-style: italic; font-weight: 600; font-size: 25px; line-height: 1; text-wrap: balance; }
 .gp-tag { font-size: 12.5px; line-height: 1.35; color: rgba(246, 236, 228, .66); text-wrap: pretty; }
 .gp-tile[aria-pressed="true"] .gp-tag { color: rgba(20, 15, 21, .66); }
 .gp-check { display: none; }
-.gp-art { position: relative; width: 64px; height: 58px; flex: none; }
-.gp-art > :is(.uc-card, .uc-back, .gp-photo) { position: absolute; top: 4px; transform-origin: 50% 110%; }
-.gp-art .uc-card, .gp-art .uc-back { --cw: 34px; }
+.gp-art { position: relative; width: 62px; height: 58px; flex: none; }
+.gp-art > :is(.uc-card, .uc-back, .gp-photo, .pi-card) { position: absolute; top: 4px; transform-origin: 50% 110%; }
+.gp-art .uc-card, .gp-art .uc-back, .gp-art .pi-card { --cw: 34px; }
 .gp-art canvas { position: absolute; left: -8px; top: -8px; width: 80px; height: 74px; display: block; }
 .gp-photo { display: block; width: 34px; aspect-ratio: 5 / 7; border-radius: 4px; overflow: hidden; background: var(--surface-2); box-shadow: 0 6px 12px -6px rgba(0, 0, 0, .7), 0 0 0 1.5px var(--porcelain); }
 .gp-photo img { width: 100%; height: 100%; object-fit: cover; display: block; max-width: none; }
-@media (max-width: 400px) {
+@media (max-width: 440px) {
   .gp-tiles { gap: 6px; }
-  .gp-tile { padding: 10px 9px 11px; border-radius: 18px; }
+  .gp-tile { gap: 9px; padding: 7px 10px 7px 7px; border-radius: 18px; }
   .gp-tag { display: none; }
-  .gp-name { font-size: 21px; }
+  .gp-name { font-size: 22px; }
 }
-@media (max-width: 340px) { .gp-name { font-size: 18px; } }
+@media (max-width: 350px) { .gp-name { font-size: 19px; } .gp-art { transform: scale(.88); transform-origin: 0 50%; width: 55px; } }
 
 /* the setup sheet: one frosted panel, its parts divided by hairlines */
 .setup {
@@ -443,6 +445,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   .bd-photo { object-position: 50% 16%; }
   .bd-photo[data-for="uc"] { object-position: 52% 12%; }
   .bd-photo[data-for="pz"] { object-position: 50% 10%; }
+  .bd-photo[data-for="pi"] { object-position: 42% 12%; }
   .backdrop::after {
     background: linear-gradient(90deg, var(--velvet) 0%, rgba(20, 15, 21, .74) 16%, rgba(20, 15, 21, .18) 42%, rgba(20, 15, 21, 0) 60%),
       linear-gradient(0deg, rgba(20, 15, 21, .55), rgba(20, 15, 21, 0) 34%);
@@ -837,7 +840,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
 @media (max-width: 460px) { .pz-photos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } }
 .uc-intro { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px 16px; padding: 16px 0 18px; }
 .uc-mini { position: relative; width: 82px; height: 70px; }
-.uc-mini .uc-card { position: absolute; top: 4px; --cw: 44px; transform-origin: 50% 110%; }
+.uc-mini :is(.uc-card, .pi-card) { position: absolute; top: 4px; --cw: 44px; transform-origin: 50% 110%; }
 .uc-opp-pick .avs { display: flex; justify-content: center; }
 .uc-opp-pick .avs svg { width: 30px; height: 30px; padding: 2px; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--velvet); margin-left: -9px; }
 .uc-opp-pick button[aria-pressed="true"] .avs svg { border-color: var(--porcelain); background: #efe2d8; }
@@ -1256,6 +1259,58 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
 .net-gone { z-index: 67; }
 @media (max-width: 380px) { .onl-chips { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
+
+/* ---------- Pişti: French cards with a photo, the index on a porcelain tab cut into its corner ---------- */
+.pi-card {
+  --cw: 90px; --ink: #2b1d29;
+  position: relative; display: block; width: var(--cw); aspect-ratio: 5 / 7; flex: none; padding: 0; margin: 0;
+  container-type: inline-size; border: 0; border-radius: calc(var(--cw) * .07); overflow: hidden; isolation: isolate;
+  background: linear-gradient(165deg, #fffdfa, #f7efe8 62%, #efe3da);
+  color: var(--ink); font: inherit; text-align: left;
+  box-shadow: inset 0 0 0 1px rgba(43, 29, 41, .14), 0 12px 24px -14px rgba(0, 0, 0, .9), 0 2px 5px -1px rgba(0, 0, 0, .5);
+}
+.pi-card.cuori, .pi-card.quadri { --ink: #b51f42; }
+.pc-ph { position: absolute; inset: 4.6cqw; border-radius: 4.4cqw; overflow: hidden; background: #2b1d29; }
+.pc-ph img { width: 100%; height: 100%; object-fit: cover; display: block; max-width: none; }
+.pi-card.jack .pc-ph::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1.7cqw #e1bf74, inset 0 0 0 2.6cqw rgba(43, 29, 41, .3); pointer-events: none; }
+.pc-idx {
+  position: absolute; z-index: 2; top: 0; left: 0; min-width: 24cqw; padding: 3.2cqw 2.4cqw 3.4cqw 3.6cqw;
+  display: flex; flex-direction: column; align-items: center; gap: .4cqw;
+  background: #fbf6f1; border-bottom-right-radius: 7cqw; color: var(--ink);
+}
+.pc-idx.br { top: auto; left: auto; right: 0; bottom: 0; transform: rotate(180deg); }
+.pc-r { display: block; font: italic 700 27cqw/.84 var(--font-display); font-variant-numeric: lining-nums; letter-spacing: -.04em; }
+.pc-su { display: block; width: 12.5cqw; height: 12.5cqw; fill: currentColor; }
+.pc-pts {
+  position: absolute; z-index: 2; left: 8cqw; bottom: 8cqw; padding: .6cqw 2.8cqw; border-radius: 99px;
+  background: #ecd08f; color: #2a1d10; font: 800 max(8px, 10cqw)/1.25 var(--font-ui); box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, .4);
+}
+@container (max-width: 60px) { .pc-idx.br, .pc-pts { display: none; } }
+
+.pis .pi-center { position: relative; display: flex; align-items: center; gap: calc(var(--pw) * .42); }
+.pi-deck { position: relative; width: calc(var(--pw) * .78 + 6px); aspect-ratio: 5 / 7; }
+.pi-stack .uc-back { position: absolute; left: 0; top: 0; --cw: calc(var(--pw) * .78); }
+.pi-stack .uc-back:nth-child(1) { transform: translate(6px, 6px); }
+.pi-stack .uc-back:nth-child(2) { transform: translate(3px, 3px); }
+.pi-deck.empty::before { content: ""; position: absolute; inset: 0 6px 6px 0; border-radius: calc(var(--pw) * .06); border: 1.5px dashed rgba(246, 236, 228, .16); }
+.pi-pile { position: relative; width: var(--pw); aspect-ratio: 5 / 7; }
+.pi-pile > * { position: absolute; left: 0; top: 0; --cw: var(--pw); }
+.pi-pile.empty::before { content: ""; position: absolute; inset: 0; border-radius: calc(var(--pw) * .07); border: 1.5px dashed rgba(246, 236, 228, .26); }
+.pis .uc-hand .pi-card {
+  --cw: var(--hw); position: absolute; left: 0; bottom: 16px; cursor: pointer; transform-origin: 50% 130%;
+  transform: translate(var(--x, 0), var(--y, 0)) rotate(var(--r, 0deg));
+  transition: transform .28s cubic-bezier(.2, .9, .3, 1.1), box-shadow .2s ease, filter .25s ease;
+}
+.pis .uc-hand .pi-card.can { transform: translate(var(--x, 0), calc(var(--y, 0px) - 18px)) rotate(var(--r, 0deg)); box-shadow: 0 0 0 2.5px var(--gold-soft), 0 0 24px 2px rgba(237, 213, 161, .32), 0 18px 28px -14px rgba(0, 0, 0, .95); }
+.pis .uc-hand .pi-card.wait { cursor: default; filter: brightness(.88) saturate(.9); }
+.pis .uc-hand .pi-card.fresh { animation: ucIn .45s cubic-bezier(.2, .9, .3, 1.2); }
+.pis .uc-hand .pi-card:focus-visible { outline: 2px solid var(--porcelain); outline-offset: 2px; }
+.pis .opp .shout { margin-top: 1px; }
+.pi-mine { margin: 0 0 2px; text-align: center; font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.pis.wide .pi-mine { display: none; }
+.pis.wide .uc-foot { grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr) minmax(0, 1fr); }
+@media (prefers-reduced-motion: reduce) { .pis .uc-hand .pi-card { transition-duration: .01ms !important; } .pis .uc-hand .pi-card.fresh { animation: none; } }
+
 /* ---------- keyframes ---------- */
 @keyframes photoIn { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
 @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
@@ -1306,6 +1361,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
       <img class="bd-photo" data-for="memory" src="bg/hero-memory.jpg" alt="" width="1200" height="1522" decoding="async" fetchpriority="high">
       <img class="bd-photo" data-for="uc" src="bg/hero-uc.jpg" alt="" width="1200" height="1517" decoding="async">
       <img class="bd-photo" data-for="pz" src="bg/hero-pz.jpg" alt="" width="1088" height="1380" decoding="async">
+      <img class="bd-photo" data-for="pi" src="bg/hero-pi.jpg" alt="" width="1200" height="1600" decoding="async">
     </div>
     <div class="home-inner">
       <header class="cover">
@@ -1327,6 +1383,11 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
             <button type="button" class="gp-tile" data-game="pz" aria-pressed="false">
               <span class="gp-art" id="gp-art-pz" aria-hidden="true"><canvas></canvas></span>
               <span class="gp-text"><span class="gp-name" data-i18n="gamePz"></span><span class="gp-tag" data-i18n="gpPzTag"></span></span>
+              <span class="gp-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>
+            </button>
+            <button type="button" class="gp-tile" data-game="pi" aria-pressed="false">
+              <span class="gp-art" id="gp-art-pi" aria-hidden="true"></span>
+              <span class="gp-text"><span class="gp-name" data-i18n="gamePi"></span><span class="gp-tag" data-i18n="gpPiTag"></span></span>
               <span class="gp-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>
             </button>
           </div>
@@ -1461,6 +1522,39 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
           <button type="button" class="btn primary play-btn" id="btn-pz-play" data-i18n="play"></button>
           <p class="record-line" id="pz-record"></p>
         </div>
+
+        <div class="setup-part" id="setup-pi" hidden>
+          <div class="uc-intro">
+            <span class="uc-mini" id="pi-mini" aria-hidden="true"></span>
+            <span class="hunt-text">
+              <span class="hunt-title" data-i18n="gamePi"></span>
+              <span class="hunt-sub" data-i18n="ucIntro"></span>
+            </span>
+          </div>
+          <div class="count-box">
+            <div class="count-head">
+              <span class="count-label" id="pi-opp-label" data-i18n="ucOppLabel"></span>
+              <span class="count-tag" id="pi-opp-tag"></span>
+            </div>
+            <div class="uc-opp-pick" id="pi-opp-pick" role="group" aria-labelledby="pi-opp-label">
+              <button type="button" data-opp="1" aria-pressed="false"><span class="avs"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#av-fox"/></svg></span><span class="n">1</span><span class="l"></span></button>
+              <button type="button" data-opp="2" aria-pressed="false"><span class="avs"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#av-fox"/></svg><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#av-cat"/></svg></span><span class="n">2</span><span class="l"></span></button>
+              <button type="button" data-opp="3" aria-pressed="false"><span class="avs"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#av-fox"/></svg><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#av-cat"/></svg><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#av-owl"/></svg></span><span class="n">3</span><span class="l"></span></button>
+            </div>
+          </div>
+          <details class="uc-rules">
+            <summary data-i18n="ucRulesTitle"></summary>
+            <ol id="pi-rules-list"></ol>
+          </details>
+          <button type="button" class="deck-row">
+            <span class="deck-thumb" aria-hidden="true"><span class="dk dk-b"><span class="face back"><span class="mono">B</span></span></span><span class="dk dk-f"><span class="face front"><img alt="" draggable="false"></span></span></span>
+            <span class="deck-txt"><span class="count-label" data-i18n="deckLabel"></span><span class="deck-name"></span></span>
+            <span class="deck-go"><span data-i18n="deckChange"></span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+          </button>
+          <button type="button" class="btn primary play-btn" id="btn-pi-play" data-i18n="play"></button>
+          <button type="button" class="btn online-btn" data-net-game="pi" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.2" r="3.2"/><path d="M2.8 19.5c0-3.5 2.8-5.9 6.2-5.9s6.2 2.4 6.2 5.9"/><circle cx="17" cy="9.2" r="2.6"/><path d="M15.4 13.8c3.2 0 5.8 2.1 5.8 5.2"/></svg><span data-i18n="netPlayOnline"></span></button>
+          <p class="record-line" id="pi-record"></p>
+        </div>
       </div>
 
       <footer class="home-foot">
@@ -1533,6 +1627,33 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
         <button type="button" class="btn gold" id="uc-call" data-i18n="ucCall" disabled></button>
         <button type="button" class="btn catch" id="uc-catch" data-i18n="ucCatch" hidden></button>
       </div>
+    </div>
+  </section>
+
+  <section id="pi" class="screen ucs pis" hidden data-i18n-attr="aria-label:piLabel">
+    <header class="uc-head">
+      <button type="button" class="icon-btn" id="pi-exit" data-i18n-attr="aria-label:exit"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="uc-titles"><h2 class="uc-title" data-i18n="gamePi"></h2><span class="uc-sub" id="pi-sub"></span></div>
+      <div class="uc-stats">
+        <div class="stat"><span class="st-label" data-i18n="piStatTaken"></span><span class="st-val" id="pi-st-taken">0</span></div>
+        <div class="stat"><span class="st-label" data-i18n="piStatPisti"></span><span class="st-val" id="pi-st-pisti">0</span></div>
+        <div class="stat"><span class="st-label" data-i18n="ucStatDeck"></span><span class="st-val" id="pi-st-deck">0</span></div>
+      </div>
+      <button type="button" class="icon-btn audio-btn" id="audio-pi" aria-pressed="true"></button>
+    </header>
+    <div class="uc-opps" id="pi-opps"></div>
+    <div class="uc-table" id="pi-table">
+      <div class="uc-felt" aria-hidden="true"></div>
+      <div class="pi-center">
+        <div class="pi-deck" id="pi-deck" aria-hidden="true"><span class="pi-stack" id="pi-stack"></span><span class="uc-count" id="pi-count"></span></div>
+        <div class="pi-pile empty" id="pi-pile" role="img"></div>
+      </div>
+      <span class="color-chip" id="pi-chip"><span></span></span>
+    </div>
+    <div class="uc-foot">
+      <p class="uc-status" id="pi-status" aria-live="polite"></p>
+      <div class="uc-hand" id="pi-hand" role="group" data-i18n-attr="aria-label:ucHandAria"></div>
+      <p class="pi-mine" id="pi-mine"></p>
     </div>
   </section>
 
@@ -1794,6 +1915,10 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   <symbol id="av-cat" viewBox="0 0 40 40"><path d="M7 6l8 8.5h10L33 6v18c0 7.5-6 11.5-13 11.5S7 31.5 7 24z" fill="#8d93a0"/><path d="M10 10.5l3.6 3.8M30 10.5l-3.6 3.8" stroke="#e8a2b0" stroke-width="2.4" stroke-linecap="round"/><ellipse cx="14.8" cy="21.5" rx="2.1" ry="2.6" fill="#2a1219"/><ellipse cx="25.2" cy="21.5" rx="2.1" ry="2.6" fill="#2a1219"/><path d="M18.3 26.4h3.4L20 28.4z" fill="#e8a2b0"/><path d="M4 25.5l8.5 1M4 29.5l8.5-1M36 25.5l-8.5 1M36 29.5l-8.5-1" stroke="#2a1219" stroke-width="1" stroke-linecap="round"/></symbol>
   <symbol id="av-owl" viewBox="0 0 40 40"><path d="M8 8.5l6 4.2q6-3 12 0l6-4.2v18c0 6.5-5.4 10.5-12 10.5S8 33 8 26.5z" fill="#8b5e3c"/><path d="M12 31q8 5 16 0" stroke="#c99a6a" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="15" cy="20.5" r="5.2" fill="#fff4ea"/><circle cx="25" cy="20.5" r="5.2" fill="#fff4ea"/><circle cx="15.4" cy="20.8" r="2.4" fill="#2a1219"/><circle cx="24.6" cy="20.8" r="2.4" fill="#2a1219"/><path d="M18.4 25h3.2L20 28z" fill="#e2b95c"/></symbol>
   <symbol id="av-bunny" viewBox="0 0 40 40"><ellipse cx="14.5" cy="10" rx="4.2" ry="9" fill="#ece3de"/><ellipse cx="25.5" cy="10" rx="4.2" ry="9" fill="#ece3de"/><ellipse cx="14.5" cy="10.6" rx="2" ry="6.4" fill="#f2a7b6"/><ellipse cx="25.5" cy="10.6" rx="2" ry="6.4" fill="#f2a7b6"/><circle cx="20" cy="25.5" r="11.5" fill="#ece3de"/><circle cx="15.6" cy="24" r="1.9" fill="#2a1219"/><circle cx="24.4" cy="24" r="1.9" fill="#2a1219"/><path d="M18.3 28.2h3.4L20 30.2z" fill="#e8a2b0"/><path d="M20 30.2v1.8M17.6 32.6c1.3.9 3.5.9 4.8 0" stroke="#2a1219" stroke-width="1" fill="none" stroke-linecap="round"/></symbol>
+  <symbol id="su-picche" viewBox="0 0 24 24"><path d="M12 1.8C9.5 5.9 3.4 9.1 3.4 13.7c0 2.8 2.1 4.8 4.7 4.8 1.3 0 2.5-.5 3.3-1.5-.3 2.1-1.2 3.6-2.9 5.1h7c-1.7-1.5-2.6-3-2.9-5.1.8 1 2 1.5 3.3 1.5 2.6 0 4.7-2 4.7-4.8 0-4.6-6.1-7.8-8.6-11.9z"/></symbol>
+  <symbol id="su-cuori" viewBox="0 0 24 24"><path d="M12 21.4C7.3 17.4 2.4 13.5 2.4 8.5c0-3.1 2.4-5.4 5.3-5.4 1.8 0 3.4.9 4.3 2.4.9-1.5 2.5-2.4 4.3-2.4 2.9 0 5.3 2.3 5.3 5.4 0 5-4.9 8.9-9.6 12.9z"/></symbol>
+  <symbol id="su-quadri" viewBox="0 0 24 24"><path d="M12 1.6c2 3.6 4.5 7.1 7.7 10.4-3.2 3.3-5.7 6.8-7.7 10.4-2-3.6-4.5-7.1-7.7-10.4C7.5 8.7 10 5.2 12 1.6z"/></symbol>
+  <symbol id="su-fiori" viewBox="0 0 24 24"><circle cx="12" cy="6.7" r="4.4"/><circle cx="6.6" cy="13.3" r="4.4"/><circle cx="17.4" cy="13.3" r="4.4"/><circle cx="12" cy="12" r="2.8"/><path d="M12 10.5l-1.2 6.2c-.4 2.2-1.3 3.8-3 5.3h8.4c-1.7-1.5-2.6-3.1-3-5.3z"/></symbol>
 </svg>
 
 <p class="sr-only" id="live" aria-live="polite"></p>
@@ -1862,7 +1987,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
       foundKicker: 'Hai trovato', foundMeta: 'Tappa {k} di 9 · {n} carte', playStop: 'Gioca la tappa',
       mapProgress: 'Tappa {k} di 9', mapDone: 'Caccia completata', huntDoneTitle: 'Caccia completata!', huntDoneText: 'Hai trovato il tesoro e le carte Oro sono tue.',
       stopDoneAria: '{name}, tappa completata', huntKicker: 'Tappa {k} di 9 · {name}', nextClue: 'Apri il prossimo indizio',
-      finTitle: 'Hai trovato il tesoro!', finText: 'Hai sbloccato le carte Oro, nere e oro, per Memory e Ultima carta.', finStops: 'Tappe completate', finStars: 'Stelle raccolte',
+      finTitle: 'Hai trovato il tesoro!', finText: 'Hai sbloccato le carte Oro, nere e oro, per Memory, Ultima carta e Pişti.', finStops: 'Tappe completate', finStars: 'Stelle raccolte',
       finTry: 'Gioca con le carte Oro', finNew: 'Nuova caccia',
       stops: {
         set: 'Il set', camerino: 'Il camerino', cappadocia: 'La Cappadocia', frutteto: 'Il frutteto', nizza: 'Nizza', montecarlo: 'Monte Carlo',
@@ -1949,10 +2074,33 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
       aPzStart: 'Puzzle da {n} pezzi: trascina i pezzi sulla foto.', aPzPlaced: 'Pezzo al suo posto: {m} su {n}.',
       // ---- card models ----
       deckLabel: 'Le carte', deckChange: 'Cambia', deckRowLabel: 'Le carte: {name}. Cambia modello',
-      deckPickTitle: 'Scegli le carte', deckPickSub: 'Valgono per Memory e Ultima carta.', deckDone: 'Fatto',
+      deckPickTitle: 'Scegli le carte', deckPickSub: 'Valgono per Memory, Ultima carta e Pişti.', deckDone: 'Fatto',
       deckLocked: 'Trova il tesoro per sbloccarle', aDeck: 'Carte {name}',
       deckNames: { classico: 'Velluto', polaroid: 'Polaroid', cipria: 'Cipria', notte: 'Notte', nazar: 'Nazar', oro: 'Oro' },
       deckDescs: { classico: 'Velluto prugna e porcellana', polaroid: 'Si sviluppano quando le giri', cipria: 'Rosa con i fiocchi', notte: 'Blu notte e stelle', nazar: "L'occhio portafortuna", oro: 'Il premio del tesoro' },
+      // ---- Pişti ----
+      gamePi: 'Pişti', gpPiTag: 'Prendi le carte dal tavolo', piLabel: 'Pişti',
+      ledePi: "Il gioco di carte più amato in Turchia: prendi le carte dal tavolo con una carta dello stesso valore o con il fante. Su ogni carta c'è una foto di Burcu.",
+      piRules: [
+        'Si gioca con 52 carte. Ognuno ne riceve 4 e altre 4 vanno sul tavolo: si vede solo quella in cima.',
+        'A turno giochi una carta sul tavolo. Se ha lo stesso valore di quella in cima, prendi tutte le carte del tavolo.',
+        'Il fante prende sempre tutto il tavolo, qualunque sia la carta in cima.',
+        "Pişti: se sul tavolo c'è una carta sola e la prendi con una dello stesso valore guadagni 10 punti. Con un fante su un fante sono 20.",
+        'Quando tutti hanno finito le carte se ne distribuiscono altre 4, finché il mazzo non finisce. Le carte rimaste sul tavolo vanno a chi ha preso per ultimo.',
+        'Punti: ogni asso e ogni fante 1, il 2 di fiori 2, il 10 di quadri 3, e 3 punti a chi prende più carte.',
+      ],
+      piSuits: { picche: 'picche', cuori: 'cuori', quadri: 'quadri', fiori: 'fiori' },
+      piRankNames: { A: 'Asso', J: 'Fante', Q: 'Donna', K: 'Re' }, piCardFmt: '{rank} di {suit}',
+      piStatTaken: 'Prese', piStatPisti: 'Pişti', piTaken: '{n} carte prese', piPistiN: 'Pişti ×{n}',
+      piMine: 'Hai preso {n} carte', piMinePisti: 'Hai preso {n} carte · {p} pişti',
+      piHintEmpty: 'Il tavolo è vuoto: scegli quale carta lasciare.', piHintPisti: 'Puoi fare pişti con la carta illuminata!',
+      piHintTake1: 'La carta illuminata prende tutto il tavolo.', piHintTakeN: 'Le carte illuminate prendono tutto il tavolo.',
+      piHintNone: 'Nessuna carta prende il tavolo: scegli quale lasciare.', piTakes: 'prende il tavolo',
+      piPisti: 'Pişti!', piJackPisti: 'Pişti di fanti!', piPistiSub: '{name} guadagna {p} punti', piPistiSubYou: 'Guadagni {p} punti',
+      piTakeN: '+{n} carte', piLast: 'Le ultime carte', piLastSub: 'Vanno a {name}', piLastSubYou: 'Sono tue',
+      piOnTable: '{n} carte sul tavolo', piOnTable1: '1 carta sul tavolo', piPileEmpty: 'Tavolo vuoto', piPileAria: '{n} carte sul tavolo, in cima {card}',
+      aPiTake: '{name} prende {n} carte.', aPiTakeYou: 'Prendi {n} carte.', piKicker: 'Mano {r} · Pişti',
+      piRowCards: 'Carte prese', piCardsN: '{n} carte', piRowPisti: 'Pişti', piRowJA: 'Assi e fanti', piRow2c: '2 di fiori', piRow10d: '10 di quadri', piRowMost: 'Più carte',
       // ---- online ----
       netPlayOnline: 'Gioca online con gli amici', netLabel: 'Gioca online', netTitle: 'Gioca online',
       netLeadCreate: 'Crea una stanza per {game} e manda il link agli amici: potete giocare da 2 a 4, ognuno sul suo telefono.',
@@ -2035,7 +2183,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
       foundKicker: 'Buldun', foundMeta: 'Durak {k}/9 · {n} kart', playStop: 'Durağı oyna',
       mapProgress: 'Durak {k}/9', mapDone: 'Av tamamlandı', huntDoneTitle: 'Av tamamlandı!', huntDoneText: 'Hazineyi buldun ve altın kartlar artık senin.',
       stopDoneAria: '{name}, durak tamamlandı', huntKicker: 'Durak {k}/9 · {name}', nextClue: 'Sonraki ipucunu aç',
-      finTitle: 'Hazineyi buldun!', finText: 'Memory ve Son Kart için siyah-altın kartların kilidini açtın.', finStops: 'Tamamlanan duraklar', finStars: 'Toplanan yıldızlar',
+      finTitle: 'Hazineyi buldun!', finText: 'Memory, Son Kart ve Pişti için siyah-altın kartların kilidini açtın.', finStops: 'Tamamlanan duraklar', finStars: 'Toplanan yıldızlar',
       finTry: 'Altın kartlarla oyna', finNew: 'Yeni av',
       stops: {
         set: 'Set', camerino: 'Kulis', cappadocia: 'Kapadokya', frutteto: 'Meyve bahçesi', nizza: 'Nice', montecarlo: 'Monte Carlo',
@@ -2122,10 +2270,33 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
       aPzStart: '{n} parçalık yapboz: parçaları fotoğrafın üstüne sürükle.', aPzPlaced: 'Parça yerinde: {n} parçadan {m}.',
       // ---- kart modelleri ----
       deckLabel: 'Kartlar', deckChange: 'Değiştir', deckRowLabel: 'Kartlar: {name}. Modeli değiştir',
-      deckPickTitle: 'Kartlarını seç', deckPickSub: 'Memory ve Son Kart için geçerli.', deckDone: 'Tamam',
+      deckPickTitle: 'Kartlarını seç', deckPickSub: 'Memory, Son Kart ve Pişti için geçerli.', deckDone: 'Tamam',
       deckLocked: 'Açmak için hazineyi bul', aDeck: '{name} kartlar',
       deckNames: { classico: 'Kadife', polaroid: 'Polaroid', cipria: 'Pudra', notte: 'Gece', nazar: 'Nazar', oro: 'Altın' },
       deckDescs: { classico: 'Mürdüm kadife ve porselen', polaroid: 'Çevirince fotoğraf belirir', cipria: 'Fiyonklu pembe', notte: 'Gece mavisi ve yıldızlar', nazar: 'Uğur getiren göz', oro: 'Hazinenin ödülü' },
+      // ---- Pişti ----
+      gamePi: 'Pişti', gpPiTag: 'Yerdeki kartları topla', piLabel: 'Pişti',
+      ledePi: "Türkiye'nin en sevilen kart oyunu: aynı değerde bir kartla ya da valeyle yerdeki kartları topla. Her kartta bir Burcu fotoğrafı var.",
+      piRules: [
+        '52 kartla oynanır. Herkese 4 kart dağıtılır, 4 kart da yere konur: sadece en üstteki açıktır.',
+        'Sırayla yere bir kart atarsın. Attığın kart en üstteki kartla aynı değerdeyse yerdeki bütün kartları alırsın.',
+        'Vale, en üstte hangi kart olursa olsun yerdeki bütün kartları alır.',
+        'Pişti: yerde tek kart varken onu aynı değerde bir kartla alırsan 10 puan kazanırsın. Valeyle vale pişti 20 puan.',
+        "Herkesin eli bitince deste bitene kadar 4'er kart daha dağıtılır. Yerde kalan kartlar en son alan oyuncuya gider.",
+        'Puanlar: her as ve her vale 1, sinek ikilisi 2, karo onlusu 3 puan; en çok kartı alan 3 puan alır.',
+      ],
+      piSuits: { picche: 'Maça', cuori: 'Kupa', quadri: 'Karo', fiori: 'Sinek' },
+      piRankNames: { A: 'as', J: 'vale', Q: 'kız', K: 'papaz' }, piCardFmt: '{suit} {rank}',
+      piStatTaken: 'Alınan', piStatPisti: 'Pişti', piTaken: '{n} kart aldı', piPistiN: 'Pişti ×{n}',
+      piMine: '{n} kart aldın', piMinePisti: '{n} kart aldın · {p} pişti',
+      piHintEmpty: 'Yer boş: hangi kartı bırakacağını seç.', piHintPisti: 'Parlayan kartla pişti yapabilirsin!',
+      piHintTake1: 'Parlayan kart yerdeki bütün kartları alır.', piHintTakeN: 'Parlayan kartlar yerdeki bütün kartları alır.',
+      piHintNone: 'Hiçbir kartın yerdekileri almıyor: bırakacağın kartı seç.', piTakes: 'yerdekileri alır',
+      piPisti: 'Pişti!', piJackPisti: 'Vale pişti!', piPistiSub: '{name} {p} puan kazandı', piPistiSubYou: '{p} puan kazandın',
+      piTakeN: '+{n} kart', piLast: 'Son kartlar', piLastSub: '{name} alıyor', piLastSubYou: 'Senin',
+      piOnTable: 'Yerde {n} kart', piOnTable1: 'Yerde 1 kart', piPileEmpty: 'Yer boş', piPileAria: 'Yerde {n} kart, en üstte {card}',
+      aPiTake: '{name} {n} kart aldı.', aPiTakeYou: '{n} kart aldın.', piKicker: '{r}. el · Pişti',
+      piRowCards: 'Aldığın kartlar', piCardsN: '{n} kart', piRowPisti: 'Pişti', piRowJA: 'Aslar ve valeler', piRow2c: 'Sinek ikilisi', piRow10d: 'Karo onlusu', piRowMost: 'En çok kart',
       // ---- çevrimiçi ----
       netPlayOnline: 'Arkadaşlarınla çevrimiçi oyna', netLabel: 'Çevrimiçi oyna', netTitle: 'Çevrimiçi oyna',
       netLeadCreate: '{game} için bir oda kur ve bağlantıyı arkadaşlarına gönder: 2 ile 4 kişi, herkes kendi telefonunda oynayabilir.',
@@ -2629,7 +2800,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
     $$('.lang button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
     renderAudio(); renderCount(); renderHuntCard();
     $('#mh-game').textContent = ' ' + t(GAME_NAME[gameSel]);
-    ucRenderSetup(); pzRenderSetup();
+    ucRenderSetup(); pzRenderSetup(); piRenderSetup();
     $('#dp-grid').textContent = ''; applyDeck();
     if (P) { pzRenderAids(); pzRenderHead(); }
     if (!mapEl.hidden) renderMap(false);
@@ -2923,7 +3094,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   function showMap() {
     if (!hunt) newHunt();
     if (S) { stopClock(); if (S.pending) clearTimeout(S.pending.t); S = null; }
-    closeOverlays(); FX.clear(); Music.setEnergy(false); pzStop();
+    closeOverlays(); FX.clear(); Music.setEnergy(false); pzStop(); piStop();
     board.textContent = ''; boardMsg.hidden = true;
     home.hidden = true; game.hidden = true; ucEl.hidden = true; mapEl.hidden = false;
     mapEl.scrollTop = 0;
@@ -3025,7 +3196,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
       current: 0,
     };
 
-    pzStop(); home.hidden = true; mapEl.hidden = true; ucEl.hidden = true; game.hidden = false;
+    pzStop(); piStop(); home.hidden = true; mapEl.hidden = true; ucEl.hidden = true; game.hidden = false;
     $('#hud-level').textContent = cfg.hunt ? stopName(cfg.hunt.stop) : t('hudCards', { n: cfg.cards });
     $('#hud-stats').hidden = cfg.duo;
     renderChips(2); $('#btn-peek').hidden = false; board.classList.remove('waiting'); onlineEl.hidden = true;
@@ -3523,7 +3694,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   const UC_BOTS = [{ key: 'volpe', av: 'fox' }, { key: 'gatto', av: 'cat' }, { key: 'civetta', av: 'owl' }];
   const ucEl = $('#uc'), ucHandEl = $('#uc-hand');
   let ucOpp = Math.min(3, Math.max(1, Math.round(+store.get('bo-uc-opp', 3) || 3)));
-  let gameSel = ['uc', 'pz'].includes(store.get('bo-game', 'memory')) ? store.get('bo-game', 'memory') : 'memory';
+  let gameSel = ['uc', 'pz', 'pi'].includes(store.get('bo-game', 'memory')) ? store.get('bo-game', 'memory') : 'memory';
   let U = null, ucSession = null, ucPickDone = null, ucMiniPhotos = null;
   const ucWild = (c) => c.kind === 'jolly' || c.kind === 'jolly4';
   const ucPoints = (c) => (c.kind === 'num' ? c.value : ucWild(c) ? 50 : 20);
@@ -4023,7 +4194,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   }
   async function ucStart(fresh) {
     if (S) { stopClock(); if (S.pending) clearTimeout(S.pending.t); S = null; }
-    closeOverlays(); FX.clear(); Music.setEnergy(false); pzStop();
+    closeOverlays(); FX.clear(); Music.setEnergy(false); pzStop(); piStop();
     $$('.uc-fly').forEach((e) => e.remove());
     if (fresh || !ucSession) ucSession = { nOpp: ucOpp, round: 0, totals: new Array(ucOpp + 1).fill(0), wins: new Array(ucOpp + 1).fill(0) };
     const ses = ucSession; ses.round++;
@@ -4080,7 +4251,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
 
   /* home */
   function ucRenderSetup() {
-    $$('.uc-opp-pick button').forEach((b) => {
+    $$('#setup-uc .uc-opp-pick button').forEach((b) => {
       const n = +b.dataset.opp;
       b.setAttribute('aria-pressed', String(n === ucOpp));
       $('.l', b).textContent = n === 1 ? t('ucOpp1') : t('ucOppN', { n });
@@ -4120,12 +4291,13 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
     $('#setup-memory').hidden = gs !== 'memory';
     $('#setup-uc').hidden = gs !== 'uc';
     $('#setup-pz').hidden = gs !== 'pz';
-    const lede = $('.lede'); lede.dataset.i18n = gs === 'uc' ? 'ledeUc' : gs === 'pz' ? 'ledePz' : 'lede';
+    $('#setup-pi').hidden = gs !== 'pi';
+    const lede = $('.lede'); lede.dataset.i18n = gs === 'uc' ? 'ledeUc' : gs === 'pz' ? 'ledePz' : gs === 'pi' ? 'ledePi' : 'lede';
     lede.textContent = t(lede.dataset.i18n, { photos: PHOTOS.length });
     $('#mh-game').textContent = ' ' + t(GAME_NAME[gs]);
     $('#fan').classList.toggle('uc-style', gs === 'uc');
     $('#fan').hidden = gs === 'pz'; $('#pz-hero-wrap').hidden = gs !== 'pz';
-    ucRenderSetup(); pzRenderSetup();
+    ucRenderSetup(); pzRenderSetup(); piRenderSetup();
   }
 
   /* ---------- Puzzle: a photo cut into real jigsaw pieces ----------
@@ -4142,7 +4314,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
     [[.40, .10], [.22, .32], [.78, .32], [.60, .10]],
     [[.60, .10], [.546, .034], [.70, 0], [1, 0]],
   ];
-  const GAME_NAME = { memory: 'gameMemory', uc: 'gameUc', pz: 'gamePz' };
+  const GAME_NAME = { memory: 'gameMemory', uc: 'gameUc', pz: 'gamePz', pi: 'gamePi' };
   const pzEl = $('#pz'), pzStage = $('#pz-stage'), pzBoard = $('#pz-board'), pzCanvas = $('#pz-canvas'), pzFxCv = $('#pz-fx');
   const pzLayer = $('#pz-layer'), pzTray = $('#pz-tray'), pzTrayIn = $('#pz-tray-in'), pzDragLayer = $('#pz-drag');
   const pzHitCtx = document.createElement('canvas').getContext('2d');
@@ -4420,7 +4592,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
 
   async function pzStart(photo) {
     if (S) { stopClock(); if (S.pending) clearTimeout(S.pending.t); S = null; }
-    closeOverlays(); FX.clear(); Music.setEnergy(false); ucStop(); pzStop();
+    closeOverlays(); FX.clear(); Music.setEnergy(false); ucStop(); pzStop(); piStop();
     if (!photo) photo = pzSurprise();
     const size = PZ_SIZES.find((s) => s.n === Math.min(pzN, pzMaxN())) || PZ_SIZES[1];
     const cut = pzCut(size.cols, size.rows, (Math.random() * 2147483647) | 0);
@@ -4884,7 +5056,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   const netOk = () => /^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent\.com|anthropic\.com|claude\.site)$/i.test(location.hostname);
   const netRand = (n, chars) => Array.from({ length: n }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   const netClean = (s) => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f]/g, '').trim().slice(0, 14);
-  const netGameName = (g) => t(g === 'uc' ? 'gameUc' : 'gameMemory');
+  const netGameName = (g) => t(g === 'uc' ? 'gameUc' : g === 'pi' ? 'gamePi' : 'gameMemory');
   let N = null;             // the room this device is in
   let netLib = null;
   let netPrep = { game: 'memory', code: null, b: null, mode: 'create' };
@@ -4964,7 +5136,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
 
   /* entering: create a room, or open the one a link points to */
   function netShow(mode) {
-    closeOverlays(); FX.clear();
+    closeOverlays(); FX.clear(); piStop();
     home.hidden = true; game.hidden = true; mapEl.hidden = true; ucEl.hidden = true; pzEl.hidden = true; onlineEl.hidden = false;
     onlineEl.scrollTop = 0;
     $('#onl-intro').hidden = mode !== 'intro';
@@ -5149,6 +5321,10 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
       if (!N.ses || N.ses.n !== N.players.length) N.ses = { n: N.players.length, round: 0, totals: N.players.map(() => 0), wins: N.players.map(() => 0) };
       N.ses.round++;
       N.eng = unNew(N.players.length, N.ses);
+    } else if (N.game === 'pi') {
+      if (!N.ses || N.ses.n !== N.players.length) N.ses = { n: N.players.length, round: 0, totals: N.players.map(() => 0), wins: N.players.map(() => 0) };
+      N.ses.round++;
+      N.eng = piNew(N.players.length, N.ses, { human: (p) => !!(N && N.players[p] && N.players[p].on), onOver: () => { if (N) N.phase = 'over'; } });
     } else N.eng = mnNew(N.players.length, N.opts.cards, N.round);
     N.phase = 'play';
     netPublishAll();
@@ -5179,17 +5355,17 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
     if (before && !N.host) netNotifyPeople(before, v);
     netRenderRoom();
     if (v.phase === 'lobby' || !v.g) {
-      if (!game.hidden || !ucEl.hidden) { S = null; ucStop(); closeOverlays(); board.textContent = ''; game.hidden = true; }
+      if (!game.hidden || !ucEl.hidden || !piEl.hidden) { S = null; ucStop(); piStop(); closeOverlays(); board.textContent = ''; game.hidden = true; }
       if (onlineEl.hidden || $('#onl-room').hidden) netShow('room');
       return;
     }
-    if (v.game === 'uc') unApply(v); else mnApply(v);
+    if (v.game === 'uc') unApply(v); else if (v.game === 'pi') piApply(v); else mnApply(v);
   }
   function netNotifyPeople(a, b) {
     if (!b.g) return;
     b.players.forEach((p, i) => {
       const o = a.players[i];
-      if (o && o.on && !p.on && i !== b.you) FX.float(t(b.game === 'uc' ? 'netAway' : 'netLeft', { name: p.name }), window.innerWidth / 2, 90, '');
+      if (o && o.on && !p.on && i !== b.you) FX.float(t(b.game === 'uc' || b.game === 'pi' ? 'netAway' : 'netLeft', { name: p.name }), window.innerWidth / 2, 90, '');
     });
   }
   function netRenderLink() {
@@ -5221,7 +5397,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
       ul.appendChild(li);
     }
     $('#onl-count').textContent = t('netCountOf', { n: v.players.length });
-    const memOpts = v.game !== 'uc';
+    const memOpts = v.game !== 'uc' && v.game !== 'pi';
     $('#onl-opts').hidden = !memOpts || v.phase !== 'lobby';
     if (memOpts) {
       const box = $('#onl-cards'); box.textContent = '';
@@ -5327,7 +5503,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   }
   function mnSetup(v) {
     const g = v.g;
-    closeOverlays(); FX.clear(); ucStop(); pzStop();
+    closeOverlays(); FX.clear(); ucStop(); pzStop(); piStop();
     onlineEl.hidden = true; home.hidden = true; mapEl.hidden = true; game.hidden = false;
     const s = S = {
       online: true, gid: g.gid, duo: true, cfg: { pairs: g.pairs, cards: g.n, timed: false, duo: true, specials: false, key: null },
@@ -5600,7 +5776,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   }
   function unSetup(v) {
     const g = v.g, n = g.n, me = v.you;
-    closeOverlays(); FX.clear(); pzStop();
+    closeOverlays(); FX.clear(); pzStop(); piStop();
     S = null; board.textContent = '';
     onlineEl.hidden = true; home.hidden = true; game.hidden = true; mapEl.hidden = true; ucEl.hidden = false;
     $$('.uc-fly').forEach((e) => e.remove());
@@ -5770,6 +5946,553 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
     if (w === me) celebrate(); else Sound.lose();
   }
 
+  /* ---------- Pişti: the Turkish card game ----------
+     52 cards. Four each and four on the table, only the top one face up. A card of the same rank as the top one, or
+     a jack, takes the whole table; taking a lone card with its twin is a pişti (10 points, 20 with two jacks). When
+     the hands are empty four more are dealt, until the deck runs out; the last cards on the table go to whoever took
+     last. Points: each ace and jack 1, the 2 of clubs 2, the 10 of diamonds 3, the most cards 3.
+     One engine plays every game: on this device (the computer plays the other seats) and in an online room (on the
+     device that made the room, where the computer plays only for those who left). Cards are 0-51: suit * 13 + rank. */
+  const PI_SUITS = ['picche', 'cuori', 'quadri', 'fiori'];
+  const PI_RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+  const PI_ACE = 0, PI_JACK = 10, PI_2C = 3 * 13 + 1, PI_10D = 2 * 13 + 9;
+  const piSuit = (id) => PI_SUITS[Math.floor(id / 13)];
+  const piRank = (id) => id % 13;
+  const piIsJack = (id) => piRank(id) === PI_JACK;
+  const piValue = (id) => (piRank(id) === PI_ACE || piRank(id) === PI_JACK ? 1 : 0) + (id === PI_2C ? 2 : 0) + (id === PI_10D ? 3 : 0);
+
+  // o.human(seat): true when a person plays that seat; o.onOver(): called when the hand ends
+  function piNew(n, ses, o) {
+    const human = o.human, deck = shuffle(Array.from({ length: 52 }, (_, i) => i));
+    const E = {
+      gid: netRand(6, NET_CODE), round: ses.round, n, photos: pickPhotos(52, 99, null).map((p) => p.id), deck, pile: [], down: new Set(),
+      hands: Array.from({ length: n }, () => []), won: Array.from({ length: n }, () => []), pts: new Array(n).fill(0), np: new Array(n).fill(0),
+      seen: new Array(13).fill(0), turn: (ses.round - 1) % n, last: -1, over: false, result: null, winner: -1, ev: [], en: 0, botAt: 0,
+    };
+    const ev = (e) => { e.n = ++E.en; E.ev.push(e); if (E.ev.length > 64) E.ev.splice(0, E.ev.length - 64); };
+    const top = () => (E.pile.length ? E.pile[E.pile.length - 1] : -1);
+    const deal = (first) => {
+      for (let r = 0; r < 4; r++) for (let k = 0; k < n; k++) E.hands[(E.turn + k) % n].push(E.deck.pop());
+      ev({ k: 'deal', first: !!first, from: E.turn, deck: E.deck.length, hands: E.hands.map((h) => h.slice()) });
+    };
+    const turnTo = (p, ms) => { E.turn = p; ev({ k: 'turn', p }); E.botAt = Date.now() + ms + Math.random() * 500; };
+    const finish = () => {
+      if (E.pile.length) {
+        const cards = E.pile.splice(0), p = E.last >= 0 ? E.last : E.turn;
+        E.won[p].push(...cards); cards.forEach((c) => E.down.delete(c));
+        ev({ k: 'last', p, n: cards.length });
+      }
+      const cnt = E.won.map((w) => w.length), most = Math.max(...cnt);
+      const mostP = cnt.filter((c) => c === most).length === 1 ? cnt.indexOf(most) : -1;
+      E.result = E.won.map((w, p) => {
+        const jacks = w.filter((id) => piRank(id) === PI_JACK).length, aces = w.filter((id) => piRank(id) === PI_ACE).length;
+        const c2 = w.includes(PI_2C) ? 2 : 0, d10 = w.includes(PI_10D) ? 3 : 0, mo = p === mostP ? 3 : 0;
+        return { cards: w.length, pisti: E.pts[p], np: E.np[p], ja: jacks + aces, c2, d10, most: mo, total: E.pts[p] + jacks + aces + c2 + d10 + mo };
+      });
+      const best = Math.max(...E.result.map((r) => r.total)), tops = E.result.map((r, p) => (r.total === best ? p : -1)).filter((p) => p >= 0);
+      E.winner = tops.length === 1 ? tops[0] : -1;
+      E.result.forEach((r, p) => { ses.totals[p] += r.total; });
+      if (E.winner >= 0) ses.wins[E.winner]++;
+      E.over = true;
+      ev({ k: 'end' });
+      if (o.onOver) o.onOver();
+    };
+    const play = (p, id) => {
+      if (E.over || E.turn !== p) return false;
+      const h = E.hands[p], i = h.indexOf(id);
+      if (i < 0) return false;
+      h.splice(i, 1);
+      const t0 = top(), lone = E.pile.length === 1;
+      E.pile.push(id); E.seen[piRank(id)]++;
+      ev({ k: 'play', p, id, rot: Math.round((Math.random() - .5) * 28) });
+      const match = t0 >= 0 && piRank(t0) === piRank(id), jack = t0 >= 0 && piIsJack(id);
+      let wait = 950;
+      if (match || jack) {
+        const pisti = lone && match ? (piIsJack(id) ? 20 : 10) : 0;
+        const cards = E.pile.splice(0);
+        E.won[p].push(...cards); cards.forEach((c) => E.down.delete(c));
+        if (pisti) { E.pts[p] += pisti; E.np[p]++; }
+        E.last = p;
+        ev({ k: 'take', p, n: cards.length, pisti, jack: jack && !match });
+        wait += pisti ? 1500 : 650;
+      }
+      if (E.hands.every((x) => !x.length)) {
+        if (!E.deck.length) { finish(); return true; }
+        deal(false);
+        wait += 700 + n * 300;
+      }
+      turnTo((p + 1) % n, wait);
+      return true;
+    };
+    // the computer: take when it can (a pişti above all), keep the jacks for a rich table, and leave cards the next
+    // player is unlikely to match
+    const botPick = (p) => {
+      const h = E.hands[p], t0 = top(), size = E.pile.length, late = !E.deck.length;
+      const worth = E.pile.reduce((a, id) => a + (E.down.has(id) ? .4 : piValue(id)), 0);
+      let best = h[0], bs = -Infinity;
+      h.forEach((id) => {
+        const r = piRank(id);
+        let s = Math.random() * 6;
+        if (t0 >= 0 && piRank(t0) === r) s += 200 + worth * 12 + size * 2 + (size === 1 ? (piIsJack(id) ? 200 : 100) : 0);
+        else if (t0 >= 0 && piIsJack(id)) {
+          const gain = worth * 12 + size * 2.2;
+          s += gain >= 14 || (late && h.length <= 2) ? 120 + gain : gain - 40;
+        } else {
+          const unseen = Math.max(0, 4 - E.seen[r] - h.filter((x) => piRank(x) === r).length);
+          if (!size) s += 40 - unseen * 14;
+          else s += 40 - unseen * (2 + (worth + piValue(id)) * 1.5 + (size + 1) * .25) - piValue(id) * 8;
+          if (piIsJack(id)) s -= 80;
+        }
+        if (s > bs) { bs = s; best = id; }
+      });
+      return best;
+    };
+    E.view = (s) => ({
+      gid: E.gid, round: E.round, n, photos: E.photos, deck: E.deck.length, pile: E.pile.map((id) => (E.down.has(id) ? -1 : id)),
+      hand: E.hands[s].slice(), counts: E.hands.map((h) => h.length), taken: E.won.map((w) => w.length), pts: E.pts.slice(), np: E.np.slice(),
+      turn: E.turn, over: E.over, result: E.result, winner: E.winner, totals: ses.totals.slice(), wins: ses.wins.slice(), en: E.en,
+      ev: E.ev.slice(-30).map((e) => (e.k === 'deal' ? { k: 'deal', n: e.n, first: e.first, from: e.from, deck: e.deck, counts: e.hands.map((h) => h.length), hand: e.hands[s] } : e)),
+    });
+    E.act = (seat, a) => { if (a && a.t === 'play') play(seat, a.id | 0); };
+    E.tick = () => {
+      if (E.over || human(E.turn) || Date.now() < E.botAt) return false;
+      return play(E.turn, botPick(E.turn));
+    };
+    E.stop = () => {};
+    E.pick = botPick;
+    // the table: three cards face down and one face up (a jack face up goes back into the deck)
+    const table = [E.deck.pop(), E.deck.pop(), E.deck.pop()];
+    let up = E.deck.pop();
+    while (piIsJack(up)) { E.deck.splice(Math.floor(Math.random() * (E.deck.length - 12)), 0, up); up = E.deck.pop(); }
+    table.forEach((id) => E.down.add(id));
+    E.pile = table.concat(up); E.seen[piRank(up)]++;
+    ev({ k: 'table', pile: [-1, -1, -1, up], deck: E.deck.length });
+    deal(true);
+    E.turn = (ses.round - 1) % n;
+    turnTo(E.turn, 1200 + n * 450);
+    return E;
+  }
+
+  /* Pişti on screen. The screen only draws what the engine says, so a game on this device and a game in a room look
+     and behave the same: every change arrives as a view with the latest events, which are animated in order. */
+  const piEl = $('#pi'), piHandEl = $('#pi-hand');
+  let PI = null;            // what this screen shows
+  let PL = null;            // a game on this device: the engine and its timer
+  let piSession = null, piChain = Promise.resolve(), piToken = 0, piMini = null;
+  let piOpp = Math.min(3, Math.max(1, Math.round(+store.get('bo-pi-opp', 1) || 1)));
+  const piRotAt = (i) => ((i * 53 + 7) % 25) - 12;
+  const piPhoto = (id) => (PI && PI.photos[id]) || PHOTOS[id % PHOTOS.length];
+  function piCardName(id) {
+    const r = PI_RANKS[piRank(id)], names = t('piRankNames');
+    return t('piCardFmt', { rank: names[r] || r, suit: t('piSuits')[piSuit(id)] });
+  }
+  function piFace(id, tag, photo) {
+    const el = document.createElement(tag || 'div');
+    if (tag === 'button') el.type = 'button';
+    const suit = piSuit(id), r = piRank(id), bonus = id === PI_2C ? 2 : id === PI_10D ? 3 : 0;
+    el.className = 'pi-card ' + suit + (r === PI_JACK ? ' jack' : '');
+    const idx = '<span class="pc-r"></span>' + svgUse('su-' + suit, 'pc-su');
+    el.innerHTML = '<span class="pc-ph"><img alt="" draggable="false"></span><span class="pc-idx tl">' + idx + '</span><span class="pc-idx br">' + idx + '</span>'
+      + (bonus ? '<span class="pc-pts">+' + bonus + '</span>' : '');
+    $$('.pc-r', el).forEach((b) => { b.textContent = PI_RANKS[r]; });
+    $('img', el).src = cardSrc(photo || piPhoto(id));
+    el.setAttribute('aria-label', piCardName(id));
+    return el;
+  }
+  // a card flying across the table (face up when card is given; flip turns it over on the way)
+  function piFly(from, to, o = {}) {
+    if (reduceMotion.matches || !Element.prototype.animate) return Promise.resolve();
+    const w = to.width, h = w * 1.4, top = to.top + (to.height - h) / 2;
+    const wrap = document.createElement('div'); wrap.className = 'uc-fly';
+    wrap.style.left = to.left + 'px'; wrap.style.top = top + 'px'; wrap.style.width = w + 'px'; wrap.style.height = h + 'px';
+    wrap.style.setProperty('--cw', w + 'px');
+    const inner = document.createElement('div'); inner.className = 'uc-fly-in';
+    const front = o.card != null && o.card >= 0 ? piFace(o.card) : ucBack(); front.classList.add('f-front'); inner.appendChild(front);
+    if (o.flip) { const b = ucBack(); b.classList.add('f-back'); inner.appendChild(b); }
+    wrap.appendChild(inner); document.body.appendChild(wrap);
+    const s = Math.max(.2, from.width / w);
+    const dx = from.left + from.width / 2 - (to.left + w / 2), dy = from.top + from.height / 2 - (top + h / 2);
+    const dur = o.dur || 430;
+    const a = wrap.animate([
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + s + ') rotate(' + (o.r0 || 0) + 'deg)', opacity: 1 },
+      { transform: 'translate(0px,0px) scale(1) rotate(' + (o.rot || 0) + 'deg)', opacity: o.fade ? 0 : 1 },
+    ], { duration: dur, easing: o.ease || 'cubic-bezier(.25,.85,.3,1)', fill: 'forwards' });
+    if (o.flip) inner.animate([{ transform: 'rotateY(180deg)' }, { transform: 'rotateY(0deg)' }], { duration: dur, easing: 'ease-in-out', fill: 'forwards' });
+    return a.finished.catch(() => {}).then(() => wrap.remove());
+  }
+  const piL = (seat) => (seat - PI.me + PI.n) % PI.n;
+  const piName = (seat) => (piL(seat) === 0 ? t('ucYou') : PI.players[piL(seat)].name);
+  const piVar = (n) => parseFloat(getComputedStyle(piEl).getPropertyValue(n)) || 90;
+  const piSmall = (r, w = 40) => ({ left: r.left + r.width / 2 - w / 2, top: r.top + r.height / 2 - w * .7, width: w, height: w * 1.4 });
+  function piHandRect() {
+    const r = piHandEl.getBoundingClientRect(), hw = piVar('--hw');
+    return { left: r.left + r.width / 2 - hw / 2, top: r.bottom - hw * 1.4 - 4, width: hw, height: hw * 1.4 };
+  }
+  function piSeatRect(li) { const a = $('#pi-seat-' + li + ' .avatar'); return a ? a.getBoundingClientRect() : piEl.getBoundingClientRect(); }
+  function piMeRect() { return (piEl.classList.contains('wide') ? $('#pi-st-taken') : $('#pi-mine')).getBoundingClientRect(); }
+  const piTop = () => (PI.pile.length ? PI.pile[PI.pile.length - 1] : -1);
+  const piCanTake = (id) => { const tp = piTop(); return tp >= 0 && (piRank(tp) === piRank(id) || piIsJack(id)); };
+  const piMyTurn = () => !!PI && !PI.over && PI.waiting && !PI.busy;
+
+  /* drawing */
+  function piStatus(text) { const el = $('#pi-status'); el.textContent = text; }
+  function piStatusTurn() {
+    const ids = PI.players[0].hand.filter((id) => id >= 0), tp = piTop(), takers = ids.filter(piCanTake);
+    let hint;
+    if (tp < 0) hint = t('piHintEmpty');
+    else if (PI.pile.length === 1 && ids.some((id) => piRank(id) === piRank(tp))) hint = t('piHintPisti');
+    else if (takers.length) hint = t(takers.length === 1 ? 'piHintTake1' : 'piHintTakeN');
+    else hint = t('piHintNone');
+    const el = $('#pi-status'); el.textContent = '';
+    const b = document.createElement('b'); b.textContent = t('ucYourTurn'); el.append(b, ' ' + hint);
+  }
+  function piRenderHead() {
+    const u = PI; if (!u) return;
+    const n = u.n - 1, sub = t(n === 1 ? 'ucSub1' : 'ucSub', { r: u.round, n });
+    $('#pi-sub').textContent = !u.local && N ? t('netRoomN', { code: N.code }) + ' · ' + sub.split(' · ')[0] : sub;
+    $('#pi-st-taken').textContent = u.players[0].taken;
+    $('#pi-st-pisti').textContent = u.players[0].np;
+    $('#pi-st-deck').textContent = Math.max(0, u.deck);
+  }
+  function piRenderMine() {
+    const me = PI && PI.players[0]; if (!me) return;
+    $('#pi-mine').textContent = me.np ? t('piMinePisti', { n: me.taken, p: me.np }) : t('piMine', { n: me.taken });
+  }
+  function piRenderOpps() {
+    const u = PI, box = $('#pi-opps'); if (!u) return;
+    box.textContent = '';
+    const seats = u.n === 2 ? ['top'] : u.n === 3 ? ['left', 'right'] : ['left', 'top', 'right'];
+    u.players.forEach((p, li) => {
+      if (!li) return;
+      const d = document.createElement('div');
+      d.className = 'opp seat-' + seats[li - 1] + (!u.over && u.turn >= 0 && piL(u.turn) === li ? ' turn' : '') + (p.off ? ' off' : '');
+      d.id = 'pi-seat-' + li;
+      d.innerHTML = '<span class="avatar">' + svgUse('av-' + p.av, '', '0 0 40 40') + '</span><span class="o-info"><span class="name"></span><span class="mini"></span><span class="count"></span></span>';
+      $('.name', d).textContent = p.name;
+      const mini = $('.mini', d);
+      for (let i = 0; i < Math.min(p.hand.length, 4); i++) mini.appendChild(document.createElement('i'));
+      $('.count', d).textContent = t('piTaken', { n: p.taken });
+      if (p.np) { const sh = document.createElement('span'); sh.className = 'shout'; sh.textContent = t('piPistiN', { n: p.np }); $('.o-info', d).appendChild(sh); }
+      d.setAttribute('role', 'group');
+      d.setAttribute('aria-label', p.name + ', ' + t('piTaken', { n: p.taken }) + (p.np ? ', ' + t('piPistiN', { n: p.np }) : ''));
+      box.appendChild(d);
+    });
+  }
+  function piRenderDeck() {
+    const u = PI; if (!u) return;
+    const st = $('#pi-stack'), n = Math.max(0, u.deck), want = Math.min(3, n);
+    while (st.children.length < want) st.appendChild(ucBack());
+    while (st.children.length > want) st.lastChild.remove();
+    $('#pi-count').textContent = n; $('#pi-count').hidden = !n;
+    $('#pi-deck').classList.toggle('empty', !n);
+    $('#pi-st-deck').textContent = n;
+  }
+  function piRenderPile() {
+    const u = PI, box = $('#pi-pile'); if (!u) return;
+    box.textContent = '';
+    const from = Math.max(0, u.pile.length - 5);
+    u.pile.slice(from).forEach((id, k) => {
+      const i = from + k, el = id >= 0 ? piFace(id) : ucBack();
+      el.removeAttribute('aria-label');
+      el.style.transform = 'translate(' + (((i * 17) % 9) - 4) + 'px,' + (((i * 11) % 7) - 3) + 'px) rotate(' + piRotAt(i) + 'deg)';
+      box.appendChild(el);
+    });
+    const n = u.pile.length, tp = piTop();
+    box.classList.toggle('empty', !n);
+    box.setAttribute('aria-label', n ? t('piPileAria', { n, card: tp >= 0 ? piCardName(tp) : '' }) : t('piPileEmpty'));
+    $('#pi-chip span').textContent = !n ? t('piPileEmpty') : n === 1 ? t('piOnTable1') : t('piOnTable', { n });
+  }
+  function piRenderHand(fresh) {
+    const u = PI; if (!u) return;
+    const ids = u.players[0].hand.filter((id) => id >= 0).sort((a, b) => piRank(a) - piRank(b) || a - b), mine = piMyTurn();
+    const old = new Map();
+    Array.from(piHandEl.children).forEach((e) => { if (e.dataset.id != null) old.set(+e.dataset.id, e); });
+    old.forEach((e, id) => { if (!ids.includes(id)) e.remove(); });
+    const hw = piVar('--hw'), aw = piHandEl.clientWidth || 300, n = ids.length;
+    const step = n > 1 ? Math.min(hw * .86, (aw - hw - 24) / (n - 1)) : 0;
+    const total = hw + step * Math.max(0, n - 1), x0 = Math.max(12, (aw - total) / 2), mid = (n - 1) / 2;
+    ids.forEach((id, i) => {
+      let el = old.get(id);
+      if (!el) {
+        el = piFace(id, 'button'); el.dataset.id = id;
+        el.addEventListener('click', () => piTap(id));
+        if (fresh && fresh.includes(id) && !reduceMotion.matches) { el.classList.add('fresh'); setTimeout(() => el.classList.remove('fresh'), 520); }
+      }
+      const can = mine && piCanTake(id), d = i - mid;
+      el.classList.toggle('can', can);
+      el.classList.toggle('wait', !mine);
+      el.style.setProperty('--x', Math.round(x0 + i * step) + 'px');
+      el.style.setProperty('--y', (mid ? (d / mid) * (d / mid) * 8 : 0).toFixed(1) + 'px');
+      el.style.setProperty('--r', (d * 4).toFixed(2) + 'deg');
+      el.style.zIndex = String(i + 1);
+      el.setAttribute('aria-label', piCardName(id) + (can ? ', ' + t('piTakes') : ''));
+      piHandEl.appendChild(el);
+    });
+  }
+  function piLayout() {
+    if (piEl.hidden) return;
+    const W = window.innerWidth, H = window.innerHeight, wide = W >= 760 && W / H >= 1.25;
+    piEl.classList.toggle('wide', wide);
+    piEl.classList.toggle('compact', wide ? H < 560 : H < 700);
+    const hw = Math.round(Math.max(56, Math.min(wide ? 150 : W >= 600 ? 140 : 110, wide ? Math.min(W * .1, H * .17) : Math.min(W / 4, H * .13))));
+    piEl.style.setProperty('--hw', hw + 'px');
+    const topSeat = wide ? $('.opp.seat-top', piEl) : null;
+    piEl.classList.toggle('has-top', !!topSeat);
+    if (topSeat) piEl.style.setProperty('--top-pad', Math.ceil(topSeat.getBoundingClientRect().height + (H < 560 ? 12 : 22)) + 'px');
+    piSizePiles();
+    if (PI) piRenderHand();
+  }
+  function piSizePiles() {
+    if (piEl.hidden) return;
+    const table = $('#pi-table'), cs = getComputedStyle(table), wide = piEl.classList.contains('wide');
+    const inner = table.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const pw = Math.round(Math.max(52, Math.min(wide ? 180 : 160, (inner - 18) / 1.4, table.clientWidth * (wide ? .2 : .32))));
+    if (Math.abs(piVar('--pw') - pw) >= 1) piEl.style.setProperty('--pw', pw + 'px');
+  }
+
+  /* a view from the engine: animate the new events, then show exactly what the engine has */
+  function piApply(v) {
+    const tok = piToken;
+    piChain = piChain.then(() => (tok === piToken ? piProcess(v) : null)).catch((e) => { if (window.console) console.error(e); });
+  }
+  function piSetup(v) {
+    const g = v.g, n = g.n, me = v.you;
+    closeOverlays(); FX.clear();
+    S = null; board.textContent = ''; ucStop(); pzStop();
+    onlineEl.hidden = true; home.hidden = true; game.hidden = true; mapEl.hidden = true; piEl.hidden = false;
+    $$('.uc-fly').forEach((e) => e.remove());
+    const players = [];
+    for (let li = 0; li < n; li++) {
+      const s = (me + li) % n, vp = v.players[s] || {};
+      players.push({ seat: s, name: li === 0 ? t('ucYou') : vp.name, av: vp.av || NET_AV[s], hand: [], taken: 0, np: 0, off: false });
+    }
+    PI = {
+      gid: g.gid, local: !!v.local, me, n, players, photos: g.photos.map((id) => PHOTO_BY_ID.get(id) || PHOTOS[0]),
+      deck: 52, pile: [], turn: -1, over: false, en: 0, busy: true, waiting: false, overShown: false, round: g.round, view: v, unlockT: 0,
+    };
+    piHandEl.textContent = ''; $('#pi-pile').textContent = ''; $('#pi-stack').textContent = '';
+    piRenderOpps(); piRenderDeck(); piRenderPile(); piRenderHead(); piRenderMine();
+    piLayout();
+    piStatus(t('ucDealing'));
+    preload(PI.photos.map(cardSrc), 6000);
+    $('#pi-exit').focus({ preventScroll: true });
+  }
+  async function piProcess(v) {
+    if (!v || !v.g) return;
+    const g = v.g;
+    let fresh = false;
+    if (!PI || PI.gid !== g.gid) { piSetup(v); fresh = true; }
+    const u = PI;
+    u.view = v; u.busy = true; piRenderHand();
+    clearTimeout(u.unlockT);
+    const todo = g.ev.filter((e) => e.n > u.en);
+    const gap = !fresh && todo.length && todo[0].n !== u.en + 1;
+    if ((fresh && g.ev.length && g.ev[0].n === 1) || (!fresh && !gap)) {
+      for (const e of todo) { await piAnim(e); if (PI !== u) return; u.en = e.n; }
+    }
+    piSync(u, v);
+  }
+  async function piAnim(e) {
+    const u = PI, li = e.p != null ? piL(e.p) : -1, still = () => PI === u;
+    const deckR = () => $('#pi-deck').getBoundingClientRect(), pileR = () => $('#pi-pile').getBoundingClientRect();
+    const quick = reduceMotion.matches;
+    switch (e.k) {
+      case 'table': {
+        u.deck = 52; u.pile = []; piRenderDeck(); piRenderPile();
+        const flights = [];
+        e.pile.forEach((id, i) => {
+          flights.push(wait(quick ? 0 : i * 110).then(() => {
+            if (!still()) return null;
+            u.deck--; piRenderDeck(); Sound.deal();
+            return piFly(deckR(), pileR(), { card: id, flip: id >= 0, rot: piRotAt(i), dur: 380 }).then(() => { if (!still()) return; u.pile.push(id); piRenderPile(); });
+          }));
+        });
+        await Promise.all(flights);
+        return;
+      }
+      case 'deal': {
+        const from = piL(e.from), flights = [];
+        u.players.forEach((p) => { p.hand = []; });
+        piRenderHand(); piRenderOpps();
+        for (let r = 0; r < 4; r++) {
+          for (let j = 0; j < u.n; j++) {
+            const lj = (from + j) % u.n, pl = u.players[lj], id = lj === 0 ? e.hand[r] : -1;
+            u.deck--; piRenderDeck();
+            if (lj === 0 || u.n === 2) Sound.deal();
+            flights.push(piFly(deckR(), lj === 0 ? piHandRect() : piSmall(piSeatRect(lj)), { card: lj === 0 ? id : null, flip: lj === 0, dur: 300 })
+              .then(() => { if (!still()) return; pl.hand.push(id); if (lj === 0) piRenderHand([id]); else piRenderOpps(); }));
+            await wait(quick ? 0 : 70); if (!still()) return;
+          }
+        }
+        await Promise.all(flights);
+        if (!still()) return;
+        u.deck = e.deck; piRenderDeck(); piRenderHead();
+        return;
+      }
+      case 'play': {
+        let from;
+        if (li === 0) {
+          const el = $('#pi-hand .pi-card[data-id="' + e.id + '"]');
+          from = el ? el.getBoundingClientRect() : piHandRect();
+          u.players[0].hand = u.players[0].hand.filter((x) => x !== e.id); piRenderHand();
+        } else { from = piSeatRect(li); u.players[li].hand.pop(); piRenderOpps(); }
+        Sound.flip();
+        const pos = u.pile.length;
+        await piFly(from, pileR(), { card: e.id, flip: li !== 0, rot: piRotAt(pos), r0: li === 0 ? 0 : -20 });
+        if (!still()) return;
+        u.pile.push(e.id); buzz(10); piRenderPile();
+        announce(tu('aUcPlay', li, { name: piName(e.p), card: piCardName(e.id) }));
+        return;
+      }
+      case 'take':
+      case 'last': {
+        const pr = pileR(), tp = piTop();
+        if (e.k === 'last') {
+          FX.banner(t('piLast'), tu('piLastSub', li, { name: piName(e.p) }));
+          await wait(quick ? 0 : 700); if (!still()) return;
+        } else if (e.pisti) {
+          await wait(quick ? 0 : 160); if (!still()) return;
+          FX.banner(e.pisti === 20 ? t('piJackPisti') : t('piPisti'), tu('piPistiSub', li, { name: piName(e.p), p: e.pisti }), 'gold long');
+          FX.burst(pr.left + pr.width / 2, pr.top + pr.height / 2, e.pisti === 20 ? 64 : 42, true);
+          Sound.golden(); setTimeout(() => Sound.sparkle(), 240); buzz([20, 30, 20, 30, 40]);
+          await wait(quick ? 0 : 900); if (!still()) return;
+        } else { await wait(quick ? 0 : 280); if (!still()) return; }
+        u.pile = []; piRenderPile();
+        Sound.pickup();
+        const target = li === 0 ? piMeRect() : piSeatRect(li);
+        await piFly(pr, piSmall(target), { card: tp, dur: 460, fade: true, ease: 'cubic-bezier(.55,0,.7,.4)' });
+        if (!still()) return;
+        const pl = u.players[li]; pl.taken += e.n; if (e.pisti) pl.np++;
+        FX.float(t('piTakeN', { n: e.n }), target.left + target.width / 2, target.top, e.pisti || e.jack ? 'gold' : '');
+        piRenderOpps(); piRenderMine(); piRenderHead();
+        if (e.k === 'take') announce(tu('aPiTake', li, { name: piName(e.p), n: e.n }));
+        return;
+      }
+      default:
+    }
+  }
+  function piSync(u, v) {
+    const g = v.g;
+    u.en = g.en;
+    u.players.forEach((p, li) => {
+      const s = p.seat, vp = v.players[s] || {};
+      p.hand = li === 0 ? g.hand.slice() : new Array(g.counts[s]).fill(-1);
+      p.taken = g.taken[s]; p.np = g.np[s];
+      if (li) p.name = vp.name || p.name;
+      p.off = !v.local && !vp.on;
+    });
+    u.deck = g.deck; u.pile = g.pile.slice(); u.turn = g.turn; u.over = g.over; u.round = g.round;
+    const mine = !g.over && g.turn === u.me, wasMine = u.waiting;
+    u.waiting = mine; u.busy = false;
+    piRenderOpps(); piRenderDeck(); piRenderPile(); piRenderHead(); piRenderMine(); piRenderHand();
+    Music.setEnergy(!g.over && g.deck === 0);
+    if (g.over) {
+      piStatus(g.winner === u.me ? t('ucWin') : g.winner < 0 ? t('tie') : t('ucLose', { name: piName(g.winner) }));
+      if (!u.overShown) { u.overShown = true; setTimeout(() => { if (PI === u) piResult(u.view); }, 900); }
+      return;
+    }
+    if (mine) { piStatusTurn(); if (!wasMine) Sound.turn(); }
+    else piStatus(t('ucBotTurn', { name: piName(g.turn) }) + (u.players[piL(g.turn)].off ? ' · ' + t('netOffline') : ''));
+  }
+  function piTap(id) {
+    const u = PI;
+    if (!piMyTurn() || !u.players[0].hand.includes(id)) return;
+    AudioCore.get();
+    u.waiting = false; u.busy = true; piRenderHand();
+    if (u.local) { if (PL) { PL.E.act(0, { t: 'play', id }); piLocalPush(); } return; }
+    netAct({ t: 'play', id });
+    clearTimeout(u.unlockT);
+    u.unlockT = setTimeout(() => { if (PI === u && u.busy) { u.busy = false; u.waiting = !u.over && u.turn === u.me; piRenderHand(); } }, 6000);
+  }
+  function piResult(v) {
+    const u = PI, g = v.g, me = v.you, w = g.winner, r = g.result;
+    if (!r) return;
+    const mine = r[me];
+    let record = false;
+    if (u.local) {
+      const st = Object.assign({ played: 0, won: 0, best: 0 }, store.get('bo-pi', {}));
+      st.played++;
+      if (w === me) { st.won++; if (mine.total > (st.best || 0)) { record = true; st.best = mine.total; } }
+      store.set('bo-pi', st);
+    }
+    const rows = [[t('piRowCards'), t('piCardsN', { n: mine.cards })]];
+    if (mine.pisti) rows.push([t('piRowPisti') + (mine.np > 1 ? ' ×' + mine.np : ''), '+' + mine.pisti]);
+    if (mine.ja) rows.push([t('piRowJA'), '+' + mine.ja]);
+    if (mine.c2) rows.push([t('piRow2c'), '+2']);
+    if (mine.d10) rows.push([t('piRow10d'), '+3']);
+    if (mine.most) rows.push([t('piRowMost'), '+3']);
+    u.players.forEach((p, li) => { if (li) rows.push([p.name, ptsText(r[p.seat].total)]); });
+    rows.push([t('ucRowWins'), t('ucWinsOf', { w: g.wins[me], n: g.round })]);
+    const host = N && N.host, hostName = v.players[0] ? v.players[0].name : '';
+    showResult({
+      kicker: t('piKicker', { r: g.round }), title: w === me ? t('ucWin') : w < 0 ? t('tie') : t('ucLose', { name: piName(w) }),
+      stars: null, score: mine.total, record, photos: true,
+      again: u.local || host ? t('ucAgain') : t('netWaitAgain', { name: hostName }), againOff: !u.local && !host,
+      action: u.local ? 'pi' : 'net', rows, menuLabel: u.local ? null : t('netLeave'),
+    });
+    if (w === me) celebrate(); else Sound.lose();
+  }
+
+  /* a game on this device: the computer plays the other seats */
+  function piLocalPush() {
+    if (!PL) return;
+    piApply({ local: true, you: 0, game: 'pi', players: PL.names.map((name, i) => ({ name, on: true, av: PL.avs[i] })), g: PL.E.view(0) });
+  }
+  function piStartLocal(fresh) {
+    if (S) { stopClock(); if (S.pending) clearTimeout(S.pending.t); S = null; }
+    piStop(); closeOverlays(); FX.clear(); Music.setEnergy(false); ucStop(); pzStop();
+    if (fresh || !piSession || piSession.n !== piOpp + 1) piSession = { n: piOpp + 1, round: 0, totals: new Array(piOpp + 1).fill(0), wins: new Array(piOpp + 1).fill(0) };
+    piSession.round++;
+    const bots = UC_BOTS.slice(0, piSession.n - 1);
+    const E = piNew(piSession.n, piSession, { human: (p) => p === 0 });
+    PL = { E, names: [t('ucYou')].concat(bots.map((b) => t('ucBots')[b.key])), avs: [null].concat(bots.map((b) => b.av)), timer: 0 };
+    PL.timer = setInterval(() => { if (PL && PL.E === E && E.tick()) piLocalPush(); }, 120);
+    piLocalPush();
+  }
+  function piStop() {
+    piToken++;
+    if (PL) { clearInterval(PL.timer); PL = null; }
+    if (PI) clearTimeout(PI.unlockT);
+    PI = null; piChain = Promise.resolve();
+    $$('.uc-fly').forEach((e) => e.remove());
+    piEl.hidden = true;
+  }
+  function piRequestExit() {
+    if (PI && !PI.local) { openConfirm(true); return; }
+    if (PI && !PI.over) openConfirm(false);
+    else goHome();
+  }
+
+  /* home: the setup and the tile */
+  function piRenderSetup() {
+    $$('#pi-opp-pick button').forEach((b) => {
+      const n = +b.dataset.opp;
+      b.setAttribute('aria-pressed', String(n === piOpp));
+      $('.l', b).textContent = n === 1 ? t('ucOpp1') : t('ucOppN', { n });
+    });
+    $('#pi-opp-tag').textContent = t('ucOppTag')[piOpp];
+    const ol = $('#pi-rules-list'); ol.textContent = '';
+    t('piRules').forEach((r) => { const li = document.createElement('li'); li.textContent = r; ol.appendChild(li); });
+    const st = store.get('bo-pi', null);
+    $('#pi-record').textContent = st && st.played ? t('ucRecord', { w: st.won, p: st.played, best: fmtNum(st.best || 0) }) : t('ucRecordNone');
+    if (!piMini) piMini = pickDistinct(3);
+    const cards = [PI_JACK, PI_10D, 13];
+    const mini = $('#pi-mini'); mini.textContent = '';
+    cards.forEach((id, i) => {
+      const el = piFace(id, null, piMini[i]); el.removeAttribute('aria-label');
+      el.style.left = (6 + i * 18) + 'px'; el.style.transform = 'rotate(' + [-11, 0, 11][i] + 'deg)';
+      mini.appendChild(el);
+    });
+    const art = $('#gp-art-pi');
+    if (!art.children.length) {
+      cards.forEach((id, i) => {
+        const el = piFace(id, null, piMini[i]); el.removeAttribute('aria-label');
+        el.style.left = (4 + i * 12) + 'px'; el.style.transform = 'rotate(' + [-10, 0, 10][i] + 'deg)';
+        art.appendChild(el);
+      });
+    }
+  }
+
   /* ---------- navigation ---------- */
   function closeOverlays() {
     if (ucPickDone) ucPickDone(null);
@@ -5780,13 +6503,13 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
     onlineEl.hidden = true; $('#net-gone').hidden = true;
     if (S) { stopClock(); if (S.pending) clearTimeout(S.pending.t); }
     S = null;
-    closeOverlays(); ucStop(); pzStop(); FX.clear(); Music.setEnergy(false);
+    closeOverlays(); ucStop(); pzStop(); piStop(); FX.clear(); Music.setEnergy(false);
     board.textContent = ''; boardMsg.hidden = true;
     game.hidden = true; mapEl.hidden = true; home.hidden = false;
-    renderCount(); renderHuntCard(); ucRenderSetup(); pzRenderSetup();
-    $(gameSel === 'uc' ? '#btn-uc-play' : gameSel === 'pz' ? '#btn-pz-play' : '#btn-play').focus({ preventScroll: true });
+    renderCount(); renderHuntCard(); ucRenderSetup(); pzRenderSetup(); piRenderSetup();
+    $(gameSel === 'uc' ? '#btn-uc-play' : gameSel === 'pz' ? '#btn-pz-play' : gameSel === 'pi' ? '#btn-pi-play' : '#btn-play').focus({ preventScroll: true });
   }
-  function leaveGame() { if (N || !ucEl.hidden || !pzEl.hidden) { goHome(); return; } if (S && S.cfg.hunt) showMap(); else goHome(); }
+  function leaveGame() { if (N || !ucEl.hidden || !pzEl.hidden || !piEl.hidden) { goHome(); return; } if (S && S.cfg.hunt) showMap(); else goHome(); }
   function openConfirm(online) {
     $('#cf-title').textContent = t(online ? 'netCfTitle' : 'cfTitle');
     $('#confirm .cf-text').textContent = t(online ? (N && N.host ? 'netCfTextHost' : 'netCfText') : 'cfText');
@@ -5802,7 +6525,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   let lbIndex = 0, lbList = [];
   function openGallery() {
     if (!pzEl.hidden && P) { lbList = [P.photo]; openLightbox(0); return; }
-    const list = !ucEl.hidden && U ? U.photos : S ? S.photos : null;
+    const list = !piEl.hidden && PI ? PI.photos : !ucEl.hidden && U ? U.photos : S ? S.photos : null;
     if (!list) return;
     lbList = list.slice();
     const grid = $('#gal-grid'); grid.textContent = '';
@@ -5857,6 +6580,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   $('#btn-again').addEventListener('click', () => {
     if (resultAction === 'net') { if (N && N.host) netStartGame(); return; }
     if (resultAction === 'uc') { ucStart(false); return; }
+    if (resultAction === 'pi') { piStartLocal(false); return; }
     if (resultAction === 'pz') { pzStart(pzSurprise(P && P.photo)); return; }
     if (resultAction === 'map') { showMap(); return; }
     if (S) startGame(S.cfg);
@@ -5874,9 +6598,13 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   $('#fin-new').addEventListener('click', () => { newHunt(); showMap(); });
   $('#fin-menu').addEventListener('click', goHome);
   $$('.gp-tile').forEach((b) => b.addEventListener('click', () => { if (b.dataset.game !== gameSel) { setGameSel(b.dataset.game); Sound.flip(); } }));
-  $$('.uc-opp-pick button').forEach((b) => b.addEventListener('click', () => { ucOpp = +b.dataset.opp; store.set('bo-uc-opp', ucOpp); ucRenderSetup(); Sound.tick2(); }));
+  $$('#setup-uc .uc-opp-pick button').forEach((b) => b.addEventListener('click', () => { ucOpp = +b.dataset.opp; store.set('bo-uc-opp', ucOpp); ucRenderSetup(); Sound.tick2(); }));
   $('#btn-uc-play').addEventListener('click', () => { AudioCore.get(); Sound.flip(); ucStart(true); });
   $('#uc-exit').addEventListener('click', ucRequestExit);
+  $$('#pi-opp-pick button').forEach((b) => b.addEventListener('click', () => { piOpp = +b.dataset.opp; store.set('bo-pi-opp', piOpp); piRenderSetup(); Sound.tick2(); }));
+  $('#btn-pi-play').addEventListener('click', () => { AudioCore.get(); Sound.flip(); piStartLocal(true); });
+  $('#pi-exit').addEventListener('click', piRequestExit);
+  if (window.ResizeObserver) new ResizeObserver(() => piSizePiles()).observe($('#pi-table'));
   $('#btn-pz-play').addEventListener('click', () => { AudioCore.get(); Sound.flip(); pzStart(pzSel === 'surprise' ? pzSurprise() : PHOTOS.find((p) => p.id === pzSel)); });
   $('#pz-more').addEventListener('click', () => { pzChoices = pzPickChoices(pzChoices ? pzChoices.map((p) => p.id) : []); if (pzSel !== 'surprise') pzSel = pzChoices[0].id; pzRenderSetup(); Sound.flip(); });
   $('#pz-exit').addEventListener('click', pzRequestExit);
@@ -5918,7 +6646,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
     else if (!$('#confirm').hidden) $('#cf-stay').click();
   });
   let rsz = 0;
-  window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { layoutBoard(); ucLayout(); if (!pzEl.hidden) pzLayout(); if (!home.hidden) { renderCount(); pzRenderSetup(); } }, 80); });
+  window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { layoutBoard(); ucLayout(); piLayout(); if (!pzEl.hidden) pzLayout(); if (!home.hidden) { renderCount(); pzRenderSetup(); } }, 80); });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) AudioCore.suspend(); else AudioCore.resume();
     if (P && P.phase === 'play') {
