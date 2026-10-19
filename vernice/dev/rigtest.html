@@ -1,0 +1,45 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#1b2030}</style></head><body>
+<script>
+if (!CanvasRenderingContext2D.prototype.roundRect) CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) { this.rect(x, y, w, h); return this; };
+</script>
+<script src="../lib/phaser-4.2.1.min.js"></script>
+<script type="module">
+import { paintCharacters } from '../js/art/chars.js';
+import { Rig } from '../js/rig.js';
+import { A } from '../js/anim.js';
+class S extends Phaser.Scene {
+  create() {
+    const chars = paintCharacters(this);
+    const poses = [
+      ['idle', A.idle(0)], ['walk0', A.walk(0)], ['walk1', A.walk(1.6)], ['run0', A.run(0)], ['run1', A.run(1.6)],
+      ['crouch', A.crouch(0)], ['jump', A.jump(-500)], ['fall', A.fall(600)], ['hang', A.hang(0)], ['ladder', A.ladder(0)],
+      ['guard', A.guard(0)], ['jab', A.punch(0, 0.35)], ['cross', A.punch(1, 0.35)], ['kick', A.kick(0.5)], ['roll', A.roll(0.3)],
+      ['hurt', A.hurt(0)], ['ko', A.lying(0)], ['reach', A.reach(0.5)], ['throw', A.throwing(0.5)], ['push', A.push(0)],
+    ];
+    const g = this.add.graphics();
+    poses.forEach(([name, p], i) => {
+      const x = 70 + (i % 10) * 125, y = 200 + Math.floor(i / 10) * 230;
+      g.lineStyle(1, 0x445066).lineBetween(x - 55, y, x + 55, y);
+      const r = new Rig(this, chars.ada, {});
+      r.update(p, x, y, 0.016, 1, {});
+      this.add.text(x - 50, y + 8, name, { fontSize: '13px', color: '#9fb0d0' });
+    });
+    const men = [['guard', chars.guard], ['recoverer', chars.recoverer], ['fausto', chars.fausto]];
+    men.forEach(([name, def], i) => {
+      const x = 120 + i * 160, y = 690;
+      const r = new Rig(this, def, { footPts: [[-5.8, 8.2], [13.5, 8.2]] });
+      r.update(i === 0 ? A.patrol(0.8) : A.idle(0, 'man'), x, y, 0.016, 1, {});
+      g.lineStyle(1, 0x445066).lineBetween(x - 55, y, x + 55, y);
+      this.add.text(x - 50, y + 8, name, { fontSize: '13px', color: '#9fb0d0' });
+    });
+    const big = new Rig(this, chars.ada, {});
+    big.update(A.walk(0.8), 760, 700, 0.016, 1, {});
+    big.root.setScale(2.4);
+    const big2 = new Rig(this, chars.guard, { footPts: [[-5.8, 8.2], [13.5, 8.2]] });
+    big2.update(A.patrol(0.4), 1040, 700, 0.016, 1, {});
+    big2.root.setScale(2.4);
+    window.__ready = true;
+  }
+}
+new Phaser.Game({ type: Phaser.WEBGL, width: 1280, height: 720, backgroundColor: '#1b2030', scene: S, parent: document.body });
+</script></body></html>
