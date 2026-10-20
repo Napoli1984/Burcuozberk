@@ -4,31 +4,26 @@ import { buildLevel5, T, X } from './level5.js';
 import { TileMap } from './tilemap.js';
 import { BG } from './bgdata.js';
 import { paintProps } from './art/props.js';
-import { setIllustrationImages } from './art/illus.js';
+import { setIllustrationImages, loadIllustrationImages } from './art/illus.js';
 import { Ada } from './ada.js';
 import { Enemy } from './enemy.js';
 import { registerRig } from './rig.js';
 import { A } from './anim.js';
+import { t, tv, onLang } from './i18n.js';
 import { clamp, lerp, damp, sign, rectsOverlap, rgbToHex, safeStorage } from './util.js';
 
 const SAVE_KEY = 'bo-sv-proto2';
-const RIGS = ['ada', 'guard', 'guard2', 'recov'];
+const SAVE_V = 3;
+const RIGS = ['ada', 'guard', 'guard2', 'recov', 'guard3', 'thief', 'porter1', 'porter2'];
 const NPCS = ['fausto', 'marta', 'granny', 'flatcap'];
+const PROPS = ['cart', 'tin', 'jar', 'sketch', 'sketch-s', 'trunk', 'basket', 'panel', 'scrap'];
+const JAR_ANSWER = 4;          // the fifth jar on the shelf (see the riddle)
 
-const HINTS = {
-  move: { kb: 'Muoviti con A e D (o con le frecce). Spazio per saltare.', touch: 'Muoviti con la levetta a sinistra. Salta con il tasto grande a destra.', pad: 'Muoviti con la levetta. A per saltare.' },
-  talk: { kb: 'Avvicinati a Fausto e premi E per parlare.', touch: 'Avvicinati a Fausto e tocca Parla.', pad: 'Avvicinati a Fausto e premi RB per parlare.' },
-  sneak: { kb: 'Tieni Maiusc per camminare piano, S per accovacciarti: se corri, la guardia ti sente.', touch: 'Inclina poco la levetta per camminare piano, in basso per accovacciarti: se corri, la guardia ti sente.', pad: 'Inclina poco la levetta per camminare piano, in basso per accovacciarti: se corri, la guardia ti sente.' },
-  observe: { kb: 'Tieni premuto Q per osservare: vedi più lontano e studi il giro della guardia.', touch: 'Tieni premuto l’occhio in alto per osservare il giro della guardia.', pad: 'Tieni premuto LB per osservare il giro della guardia.' },
-  hide: { all: 'Nella siepe la guardia non ti vede. Basta che non ti veda entrare.' },
-  ladder: { kb: 'W o ↑ per salire la scala. Dal loggiato si entra nel laboratorio dall’alto.', touch: 'Levetta in su per salire la scala. Dal loggiato si entra nel laboratorio dall’alto.', pad: 'Levetta in su per salire la scala. Dal loggiato si entra nel laboratorio dall’alto.' },
-  lab: { all: 'Cerca dove lavorava Lale.' },
-  stairs: { kb: 'S o ↓ sulle scale per scendere nella cripta.', touch: 'Levetta in giù sulle scale per scendere nella cripta.', pad: 'Levetta in giù sulle scale per scendere nella cripta.' },
-  ledge: { kb: 'Salta verso un bordo per aggrapparti, poi W per salire.', touch: 'Salta verso un bordo per aggrapparti, poi levetta in su per salire.', pad: 'Salta verso un bordo per aggrapparti, poi levetta in su per salire.' },
-  crypt: { all: 'La cripta. Le casse portano tutte la sigla «PA».' },
-  fight: { kb: 'J pugno, K calcio, L per rotolare via. Puoi anche scappare: lui non sa arrampicarsi.', touch: 'Pugno, Calcio e Schiva sono a destra. Puoi anche scappare: lui non sa arrampicarsi.', pad: 'X pugno, Y calcio, B per rotolare via. Puoi anche scappare: lui non sa arrampicarsi.' },
-  throw: { kb: 'E per lanciare la lattina: il rumore attira chi è vicino. Tieni W per lanciarla più in alto.', touch: 'Tocca Lancia: il rumore attira chi è vicino. Levetta in su per lanciarla più in alto.', pad: 'RB per lanciare la lattina: il rumore attira chi è vicino.' },
-  cart: { kb: 'E per spingere il carrello: travolge chi trova sulla strada.', touch: 'Tocca Spingi: il carrello travolge chi trova sulla strada.', pad: 'RB per spingere il carrello: travolge chi trova sulla strada.' },
+// Lights the guards carry: radius and strength of the light they cast, and their glow sprite.
+const LIGHTS = {
+  lantern: { r: 300, i: 0.75, color: [255, 200, 130], tint: 0xffc884, scale: 1.5, alpha: 0.24, cone: 0xffd9a0 },
+  torch: { r: 560, i: 0.75, color: [235, 240, 255], tint: 0xeef2ff, scale: 0.5, alpha: 0.5, cone: 0xe8eeff },
+  headlamp: { r: 470, i: 0.62, color: [255, 246, 225], tint: 0xfff4dc, scale: 0.36, alpha: 0.55, cone: 0xfff0d8 },
 };
 
 // Vertical camera limits for each part of the level (world y), so the view stays on the paintings.
@@ -57,7 +52,7 @@ export class WorldScene extends Phaser.Scene {
       if (!this.cache.json.exists('rigdata-' + r)) L.json('rigdata-' + r, 'img/chars/' + r + '.json');
     }
     for (const n of NPCS) if (need('npc-' + n)) L.image('npc-' + n, 'img/chars/npc-' + n + '.webp');
-    for (const p of ['cart', 'tin', 'jar', 'sketch', 'sketch-s']) if (need('p-' + p)) L.image('p-' + p, 'img/props/' + p + '.webp');
+    for (const p of PROPS) if (need('p-' + p)) L.image('p-' + p, 'img/props/' + p + '.webp');
     L.on('progress', (p) => ui.progress(p));
   }
 
@@ -74,6 +69,8 @@ export class WorldScene extends Phaser.Scene {
       paintProps(this);
       for (const r of RIGS) registerRig(this, this.cache.json.get('rigdata-' + r));
       setIllustrationImages({ jar: this.textures.get('p-jar').getSourceImage(), sketch: this.textures.get('p-sketch').getSourceImage() });
+      // pictures used only by the cards and the puzzle panels, fetched now that the level is loaded
+      loadIllustrationImages({ panel: 'img/puzzles/panel.webp', panelUV: 'img/puzzles/panel-uv.webp', pala1998: 'img/puzzles/pala-1998.webp', palaOggi: 'img/puzzles/pala-oggi.webp' });
       reg.set('painted', true);
     }
     this.rigs = {};
@@ -81,10 +78,13 @@ export class WorldScene extends Phaser.Scene {
     this.buildWorld();
     this.buildActors();
     this.buildEffects();
+    this.tintProps();
     this.setupState(data);
     this.setupCamera();
     this.scale.on('resize', this.onResize, this);
-    this.events.once('shutdown', () => { this.scale.off('resize', this.onResize, this); });
+    const offLang = onLang(() => this.relabel());
+    this.ui.on('dossierAct', (act) => { if (act === 'scraps' && this.mode === 'play') this.openScraps(); });
+    this.events.once('shutdown', () => { this.scale.off('resize', this.onResize, this); offLang(); });
     this.onResize();
     this.debugHook();
     window.__ready = true;
@@ -105,11 +105,16 @@ export class WorldScene extends Phaser.Scene {
     for (const f of BG.fronts) this.fronts[f.id] = this.add.image(f.x, f.y, f.key).setOrigin(0).setScale(1 / S).setDepth(22).setVisible(false);
     for (const h of L.hides) h.img = this.fronts[h.id];
     // props
-    this.cart = { x: L.cart.x, y: L.cart.y, vx: 0, img: this.add.image(L.cart.x, L.cart.y + 3, 'p-cart').setOrigin(0.5, 1).setScale(0.4).setDepth(15) };
+    const prop = (key, x, y, scale, depth = 15) => this.add.image(x, y, key).setOrigin(0.5, 1).setScale(scale).setDepth(depth);
+    this.cart = { x: L.cart.x, y: L.cart.y, vx: 0, img: prop('p-cart', L.cart.x, L.cart.y + 3, 0.4) };
     // dammar resin glows pale green under the UV lamp
     this.jarGlow = this.add.image(L.jar.x, L.jar.y - 9, 'glow').setBlendMode(Phaser.BlendModes.ADD).setDepth(16).setTint(0xc8ffb0).setScale(0.3).setAlpha(0.5);
-    this.sketchImg = this.add.image(L.sketch.x, L.sketch.y + 1, 'p-sketch-s').setOrigin(0.5, 1).setScale(0.25).setDepth(15).setRotation(-0.12);
-    this.cans = L.cans.map((c, i) => ({ id: 'can' + i, x: c.x, y: c.y, vx: 0, vy: 0, state: 'rest', img: this.add.image(c.x, c.y + 1, 'p-tin').setOrigin(0.5, 1).setScale(0.36).setDepth(15) }));
+    this.sketchImg = prop('p-sketch-s', L.sketch.x, L.sketch.y + 1, 0.25).setRotation(-0.12);
+    this.cans = L.cans.map((c, i) => ({ id: 'can' + i, x: c.x, y: c.y, vx: 0, vy: 0, state: 'rest', img: prop('p-tin', c.x, c.y + 1, 0.36) }));
+    this.panelImg = prop('p-panel', L.panel.x, L.panel.y, 1 / 3).setRotation(0.03);
+    this.basketImg = prop('p-basket', L.basket.x, L.basket.y, 1 / 3);
+    this.trunkImg = prop('p-trunk', L.trunk.x, L.trunk.y, 1 / 3);
+    this.scrapItems = L.scraps.map((s) => ({ ...s, img: prop('p-scrap', s.x, s.y, 0.27).setRotation(s.n === 3 ? 0.18 : -0.1) }));
     // light glows that flicker over the painted ones
     this.glows = L.lights.filter((l) => l.glow !== false).map((l) => {
       const g = this.add.image(l.x, l.y, 'glow').setBlendMode(Phaser.BlendModes.ADD).setDepth(45);
@@ -133,20 +138,20 @@ export class WorldScene extends Phaser.Scene {
     });
     this.fausto = this.npcs.find((n) => n.id === 'fausto');
     this.marta = this.npcs.find((n) => n.id === 'marta');
-    const g = L.guard, g2 = L.guard2;
-    this.guard = new Enemy(this, this.rigs.guard, { id: 'guard', kind: 'guard', x: g.x, y: g.y, hp: 7, lantern: true, depth: 25, facing: 1, route: g.route, routeI: g.routeI });
-    this.guard2 = new Enemy(this, this.rigs.guard2, { id: 'guard2', kind: 'guard', x: g2.x, y: g2.y, hp: 6, torch: true, depth: 25, facing: 1, route: g2.route, routeI: g2.routeI });
+    this.enemies = L.enemies.map((d) => new Enemy(this, this.rigs[d.rig], { ...d, depth: 25, facing: 1 }));
     const r = L.recoverer;
     this.recoverer = new Enemy(this, this.rigs.recov, {
       id: 'recov', kind: 'recoverer', x: r.x, y: r.y, hp: 5, depth: 24, facing: 1, enabled: false, state: 'patrol',
       route: [{ x: r.x - 160, wait: 2.2 }, { x: r.x + 260, wait: 2.2 }], routeI: 1,
     });
-    this.enemies = [this.guard, this.guard2, this.recoverer];
-    this.lantern = { x: 0, y: 0, r: 300, i: 0.75, color: [255, 200, 130] };
-    this.lanternGlow = this.add.image(0, 0, 'glow').setBlendMode(Phaser.BlendModes.ADD).setDepth(45).setTint(0xffc884).setScale(1.5).setAlpha(0.24);
-    this.torch = { x: 0, y: 0, r: 240, i: 0.7, color: [235, 240, 255] };
-    this.torchGlow = this.add.image(0, 0, 'glow').setBlendMode(Phaser.BlendModes.ADD).setDepth(45).setTint(0xeef2ff).setScale(0.5).setAlpha(0.5);
-    for (const e of this.enemies) e.icon = this.add.image(0, 0, 'icon-q').setScale(0.5).setDepth(48).setVisible(false);
+    this.enemies.push(this.recoverer);
+    for (const e of this.enemies) {
+      e.icon = this.add.image(0, 0, 'icon-q').setScale(0.5).setDepth(48).setVisible(false);
+      const li = LIGHTS[e.lightKind];
+      if (!li) continue;
+      e.lamp = { x: e.x, y: e.y - 80, r: li.r, i: li.i, color: li.color };
+      e.glow = this.add.image(0, 0, 'glow').setBlendMode(Phaser.BlendModes.ADD).setDepth(45).setTint(li.tint).setScale(li.scale).setAlpha(li.alpha).setVisible(false);
+    }
     this.heldCan = null;
   }
 
@@ -158,13 +163,30 @@ export class WorldScene extends Phaser.Scene {
     this.partPool = [];
   }
 
+  // Props are painted in plain light: give them the light of the place they stand in.
+  tintProps() {
+    const tint = (img, x, y) => img.setTint(this.lightAt(x, y, null, true).tint);
+    tint(this.cart.img, this.cart.x, this.cart.y - 40);
+    for (const c of this.cans) tint(c.img, c.x, c.y - 10);
+    tint(this.sketchImg, this.level.sketch.x, this.level.sketch.y - 10);
+    tint(this.panelImg, this.level.panel.x, this.level.panel.y - 15);
+    tint(this.basketImg, this.level.basket.x, this.level.basket.y - 15);
+    tint(this.trunkImg, this.level.trunk.x, this.level.trunk.y - 30);
+    for (const s of this.scrapItems) tint(s.img, s.x, s.y - 6);
+  }
+
   // ------------------------------------------------------------ game state, saving
   setupState(data) {
     const L = this.level;
-    this.flags = { fausto: false, marta: false, desk: false, clue: false, sketch: false, secret: false, crypt: false };
+    this.flags = {
+      fausto: false, marta: false, desk: false, clue: false, sketch: false, secret: false, crypt: false,
+      riddle: false, panel: false, trunk: false, pala: false, letter: false,
+    };
+    // what the puzzles remember between visits
+    this.pz = { jarsTried: new Set(), lockDigits: [0, 0, 0, 0], diffFound: new Set(), scraps: new Set(), placed: new Set() };
     this.stats = { time: 0, spotted: 0, kos: 0 };
     this.dossier = [];
-    this.objectiveText = '';
+    this.objKey = null;
     this.hintsShown = new Set();
     this.areasSeen = new Set();
     this.checkpoint = L.checkpoints[0];
@@ -181,7 +203,7 @@ export class WorldScene extends Phaser.Scene {
     this.ui.clearBarks();
     this.ui.prompt(null);
     this.ui.fade(false);
-    this.addDossier('lale', 'Lale Aydın', 'Restauratrice, amica di Ada. Non risponde da tre giorni. Lavorava qui, nel laboratorio di restauro del convento di San Domenico.', false);
+    this.addDossier('lale', false);
 
     if (this.mode === 'title') {
       this.ada.frozen = true;
@@ -193,11 +215,11 @@ export class WorldScene extends Phaser.Scene {
     this.ui.hideTitle();
     const save = data.save;
     if (save) this.applySave(save);
-    else this.objective('Parla con Fausto, il restauratore. Ha la bottega in fondo alla via.', false);
+    else this.objective('obj.fausto', false);
     this.ui.setResist(this.ada.resist);
     if (save || data.skipIntro) {
       this.ui.startPlay();
-      if (save) this.ui.toast('Riprendi dal checkpoint.', 2600);
+      if (save) this.ui.toast(t('toast.resume'), 2600);
       this.introDone = true;
     } else {
       this.ada.frozen = true;
@@ -207,9 +229,12 @@ export class WorldScene extends Phaser.Scene {
 
   saveGame() {
     if (this.mode !== 'play' || !this.store) return;
+    const p = this.pz;
     const s = {
-      v: 2, cp: this.checkpoint.id, flags: this.flags, stats: this.stats, dossier: this.dossier, objective: this.objectiveText,
+      v: SAVE_V, cp: this.checkpoint.id, flags: this.flags, stats: this.stats, obj: this.objKey,
+      dossier: this.dossier.map((d) => ({ id: d.id, vars: d.vars || null, act: d.act || null })),
       hints: [...this.hintsShown], areas: [...this.areasSeen],
+      pz: { jarsTried: [...p.jarsTried], lockDigits: p.lockDigits, diffFound: [...p.diffFound], scraps: [...p.scraps], placed: [...p.placed] },
       enemies: this.enemies.map((e) => ({ id: e.id, ko: e.ko, x: e.body.x, y: e.body.y, enabled: e.enabled })),
       cans: this.cans.map((c) => ({ x: c.x, y: c.y })), cart: this.cart.x,
     };
@@ -218,7 +243,7 @@ export class WorldScene extends Phaser.Scene {
 
   loadSave() {
     if (!this.store) return null;
-    try { const s = JSON.parse(this.store.getItem(SAVE_KEY) || 'null'); return s && s.v === 2 ? s : null; } catch (e) { return null; }
+    try { const s = JSON.parse(this.store.getItem(SAVE_KEY) || 'null'); return s && s.v === SAVE_V ? s : null; } catch (e) { return null; }
   }
 
   clearSave() { try { this.store && this.store.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
@@ -226,10 +251,17 @@ export class WorldScene extends Phaser.Scene {
   applySave(s) {
     Object.assign(this.flags, s.flags || {});
     Object.assign(this.stats, s.stats || {});
-    for (const d of s.dossier || []) this.addDossier(d.id, d.title, d.text, false);
+    for (const d of s.dossier || []) this.addDossier(d.id, false, d.vars, d.act);
     (s.hints || []).forEach((h) => this.hintsShown.add(h));
     (s.areas || []).forEach((a) => this.areasSeen.add(a));
-    this.objective(s.objective || 'Raggiungi il laboratorio di Lale, in fondo al chiostro.', false);
+    const p = s.pz || {};
+    this.pz.jarsTried = new Set(p.jarsTried || []);
+    if (Array.isArray(p.lockDigits) && p.lockDigits.length === 4) this.pz.lockDigits = p.lockDigits.slice();
+    this.pz.diffFound = new Set(p.diffFound || []);
+    this.pz.scraps = new Set(p.scraps || []);
+    this.pz.placed = new Set(p.placed || []);
+    for (const it of this.scrapItems) if (this.pz.scraps.has(it.n)) it.img.setVisible(false);
+    this.objective(s.obj || 'obj.lab', false);
     const cp = this.level.checkpoints.find((c) => c.id === s.cp) || this.level.checkpoints[0];
     this.checkpoint = cp;
     this.ada.teleport(cp.x, cp.y);
@@ -244,6 +276,12 @@ export class WorldScene extends Phaser.Scene {
       if (es.enabled && !e.enabled) e.enable(es.x, es.y);
       if (es.ko) { e.body.x = es.x; e.body.y = es.y; e.hp = 0; e.setState('ko'); e.t = 5; }
     }
+    this.tintProps();
+  }
+
+  // The language changed (from the pause menu): texts kept by the scene follow it.
+  relabel() {
+    if (this.objKey) this.ui.objective(t(this.objKey), false);
   }
 
   // ------------------------------------------------------------ camera
@@ -284,12 +322,12 @@ export class WorldScene extends Phaser.Scene {
     const c = CAM_Y[i];
     const blend = 260;
     if (i < CAM_Y.length - 1 && x > c.x1 - blend) {
-      const n = CAM_Y[i + 1], t = (x - (c.x1 - blend)) / (2 * blend);
-      return { top: lerp(c.top, n.top, t), bottom: lerp(c.bottom, n.bottom, t) };
+      const n = CAM_Y[i + 1], f = (x - (c.x1 - blend)) / (2 * blend);
+      return { top: lerp(c.top, n.top, f), bottom: lerp(c.bottom, n.bottom, f) };
     }
     if (i > 0 && x < CAM_Y[i - 1].x1 + blend) {
-      const p = CAM_Y[i - 1], t = 0.5 + (x - CAM_Y[i - 1].x1) / (2 * blend);
-      return { top: lerp(p.top, c.top, t), bottom: lerp(p.bottom, c.bottom, t) };
+      const p = CAM_Y[i - 1], f = 0.5 + (x - CAM_Y[i - 1].x1) / (2 * blend);
+      return { top: lerp(p.top, c.top, f), bottom: lerp(p.bottom, c.bottom, f) };
     }
     return c;
   }
@@ -347,11 +385,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (ui.blocked) {
-      if (ui.modal === 'dialog' || ui.modal === 'examine' || ui.modal === 'intro' || ui.modal === 'dossier' || ui.modal === 'pause' || ui.modal === 'controls') {
-        if (inp.pressed('action') || inp.pressed('jump') || inp.pressed('punch')) ui.advance();
-        else if (inp.pressed('pause') || inp.pressed('dodge')) ui.back();
-        else if (inp.pressed('dossier') && ui.modal === 'dossier') ui.back();
-      }
+      ui.handleInput(inp, rawDt);
       this.updateNpcs(rawDt);
       if (!this.ada.frozen) this.ada.animate(rawDt);
       this.updateVisuals(rawDt, true);
@@ -398,7 +432,7 @@ export class WorldScene extends Phaser.Scene {
     this.updateCart(dt);
     this.updateInteract();
     this.updateWorldTriggers(dt);
-    // music follows the most worried man
+    // music follows the most worried guard
     let ten = 0;
     for (const e of this.enemies) {
       if (!e.enabled || e.ko) continue;
@@ -408,7 +442,9 @@ export class WorldScene extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------ light
-  lightAt(x, y, skip = null) {
+  // How lit a point is (0.35..1) and the colour characters take there. skip: an enemy whose own
+  // light does not count; statics: only the lights of the place (no lights carried by people).
+  lightAt(x, y, skip = null, statics = false) {
     const reg = this.map.regionAt(x, y);
     const amb = reg.ambient;
     const k0 = 0.3 + amb * 1.3;
@@ -425,26 +461,30 @@ export class WorldScene extends Phaser.Scene {
       r += (L.color[0] / 255) * c * 1.25; g += (L.color[1] / 255) * c * 1.25; b += (L.color[2] / 255) * c * 1.25;
     };
     for (const L of this.level.lights) add(L, true);
-    if (skip !== this.guard && this.guard.enabled && !this.guard.ko) add(this.lantern, true);
-    if (skip !== this.guard2 && this.guard2.enabled && !this.guard2.ko) this.torchLight(x, y, (c) => {
-      lvl += c; r += 0.9 * c; g += 0.92 * c; b += c;
-    });
+    if (!statics) {
+      for (const e of this.enemies) {
+        if (e === skip || !e.lamp || !e.enabled || e.ko) continue;
+        if (e.lantern) { add(e.lamp, true); continue; }
+        const col = e.lamp.color;
+        this.beamLight(e, x, y, (c) => { lvl += c; r += (col[0] / 255) * c; g += (col[1] / 255) * c; b += (col[2] / 255) * c; });
+      }
+    }
     // characters never sink completely into the dark: the paintings around them are not that dark either
     const lift = (v) => clamp(0.3 + v * 0.78, 0.3, 1);
     return { lvl: clamp(lvl, 0.35, 1), tint: rgbToHex(lift(r) * 255, lift(g) * 255, lift(b) * 255) };
   }
 
-  // The torch lights a narrow beam in front of the second guard.
-  torchLight(x, y, fn) {
-    const e = this.guard2, o = this.torch;
+  // A torch or a headlamp lights a narrow beam in front of whoever carries it.
+  beamLight(e, x, y, fn) {
+    const o = e.lamp;
     const dx = (x - o.x) * e.facing, dy = y - o.y;
     if (dx < 0) return;
     const d = Math.hypot(dx, dy);
-    if (d > 560) return;
+    if (d > o.r) return;
     const ang = Math.atan2(dy, dx);
     if (Math.abs(ang - e.tilt) > e.half * 1.1) return;
     if (this.map.raycast(o.x, o.y, x, y, 16) < 0.97) return;
-    fn(0.75 * (1 - d / 560));
+    fn(o.i * (1 - d / o.r));
   }
 
   computeLight() {
@@ -456,8 +496,18 @@ export class WorldScene extends Phaser.Scene {
 
   // ------------------------------------------------------------ visuals every frame
   updateVisuals(dt, paused = false) {
-    const t = this.time.now / 1000;
+    const t0 = this.time.now / 1000;
     const ada = this.ada;
+    // the lights people carry follow their hands and heads
+    for (const e of this.enemies) {
+      if (!e.lamp) continue;
+      if (!e.enabled) { e.glow.setVisible(false); continue; }
+      const p = e.lightPoint();
+      if (p) { e.lamp.x = p.x; e.lamp.y = p.y; }
+      e.glow.setPosition(e.lamp.x, e.lamp.y);
+      if (e.lantern) e.glow.setVisible(true).setAlpha(e.ko ? 0.12 : 0.22 + 0.04 * Math.sin(t0 * 11));
+      else e.glow.setVisible(!e.ko);
+    }
     const la = this.lightAt(ada.x, ada.y - 64);
     if (ada.state === 'hidden') ada.rig.setFill(0xc9d2f2); else ada.rig.setTint(la.tint);
     if (this.heldCan) this.heldCan.img.setTint(la.tint);
@@ -470,7 +520,7 @@ export class WorldScene extends Phaser.Scene {
       if (e.iconKind && !e.ko) {
         ic.setVisible(true);
         ic.setTexture('icon-' + e.iconKind);
-        const bob = Math.sin(t * 6) * 2;
+        const bob = Math.sin(t0 * 6) * 2;
         ic.setPosition(e.rig.headPos.x, e.rig.headPos.y - 30 + bob);
         const s = e.iconKind === 'q' ? 0.36 + 0.18 * e.iconAmt : 0.56;
         ic.setScale(s);
@@ -481,26 +531,11 @@ export class WorldScene extends Phaser.Scene {
     for (const h of this.level.hides) h.img.setVisible(ada.hide === h);
     for (const g of this.glows) {
       if (!g.flick) continue;
-      const f = 0.86 + 0.08 * Math.sin(t * 7.3 + g.seed) + 0.06 * Math.sin(t * 17.1 + g.seed * 3);
+      const f = 0.86 + 0.08 * Math.sin(t0 * 7.3 + g.seed) + 0.06 * Math.sin(t0 * 17.1 + g.seed * 3);
       g.g.setAlpha(g.base * f);
     }
-    // the guard's lantern
-    const gd = this.guard;
-    if (gd.enabled) {
-      const lp = gd.rig.lanternPos;
-      this.lantern.x = lp.x; this.lantern.y = lp.y;
-      this.lanternGlow.setVisible(true).setPosition(lp.x, lp.y);
-      this.lanternGlow.setAlpha(gd.ko ? 0.12 : 0.22 + 0.04 * Math.sin(t * 11));
-    }
-    // the second guard's torch
-    const g2 = this.guard2;
-    if (g2.enabled) {
-      const hp = g2.rig.handPos;
-      this.torch.x = hp.x + g2.facing * 30; this.torch.y = hp.y + 2;
-      this.torchGlow.setVisible(!g2.ko).setPosition(this.torch.x, this.torch.y);
-    }
     this.drawCones();
-    if (this.jarGlow.visible) this.jarGlow.setAlpha(0.32 + 0.12 * Math.sin(t * 2.2));
+    if (this.jarGlow.visible) this.jarGlow.setAlpha(0.32 + 0.12 * Math.sin(t0 * 2.2));
     // the hollow wall shakes when hit
     if (this.secret.shake > 0) {
       this.secret.shake -= dt;
@@ -514,10 +549,10 @@ export class WorldScene extends Phaser.Scene {
     const g = this.coneG;
     g.clear();
     for (const e of this.enemies) {
-      if (!e.enabled || e.ko || !(e.lantern || e.torch)) continue;
+      if (!e.enabled || e.ko || !e.lamp) continue;
       const o = e.eye;
       const range = e.coneRange;
-      const col = e.aware ? 0xff5040 : (e.state === 'suspicious' || e.state === 'search' || e.S > 0.15) ? 0xffbf55 : (e.torch ? 0xe8eeff : 0xffd9a0);
+      const col = e.aware ? 0xff5040 : (e.state === 'suspicious' || e.state === 'search' || e.S > 0.15) ? 0xffbf55 : LIGHTS[e.lightKind].cone;
       const N = 20;
       const rays = [];
       for (let i = 0; i <= N; i++) {
@@ -526,7 +561,7 @@ export class WorldScene extends Phaser.Scene {
         const f = this.map.raycast(o.x, o.y, o.x + dx * range, o.y + dy * range, 10);
         rays.push([dx, dy, f * range]);
       }
-      const layers = e.torch ? [[1, 0.05], [0.75, 0.06], [0.45, 0.08]] : [[1, 0.045], [0.7, 0.045], [0.42, 0.055]];
+      const layers = e.lantern ? [[1, 0.045], [0.7, 0.045], [0.42, 0.055]] : [[1, 0.05], [0.75, 0.06], [0.45, 0.08]];
       for (const [k, alpha] of layers) {
         g.fillStyle(col, alpha);
         g.beginPath();
@@ -668,8 +703,8 @@ export class WorldScene extends Phaser.Scene {
     for (let i = 0; i < 26; i++) this.spawnPart('stone', w.x + Math.random() * w.w, w.y + Math.random() * w.h, (Math.random() - 0.3) * 260, -Math.random() * 240, 1.6 + Math.random(), { scale: 0.7 + Math.random() * 0.9, ground: w.y + w.h - 2 + Math.random() * 4 });
     for (let i = 0; i < 6; i++) this.dust(w.x + Math.random() * w.w, w.y + 30 + Math.random() * 110, 3, 30);
     this.noise(w.x, w.y + 100, NOISE.crack, 'crack', this.ada);
-    this.ui.toast('Dietro il muro c’è un passaggio.', 3600);
-    this.addDossier('passaggio', 'Un passaggio sotto la chiesa', 'In fondo alla cripta un muro sottile chiudeva un vecchio passaggio verso l’acquedotto.');
+    this.ui.toast(t('toast.wall'), 3600);
+    this.addDossier('passaggio');
     this.saveGame();
   }
 
@@ -709,9 +744,9 @@ export class WorldScene extends Phaser.Scene {
     this.snd.play('alert');
     if (e === this.recoverer && !this.recovSpoke) {
       this.recovSpoke = true;
-      this.ui.bark(e, 'Ehi, tu! Dammi quella scheda.', 2600);
-      this.showHint('fight');
+      this.ui.bark(e, t('toast.recov'), 2600);
     }
+    this.showHint('fight');
   }
 
   onLost() {}
@@ -741,7 +776,7 @@ export class WorldScene extends Phaser.Scene {
     if (!this.respawnDone && this.respawnT < 1.2) {
       this.respawnDone = true;
       this.respawnAt(this.checkpoint);
-      this.ui.toast('Ada riprende fiato. Si ricomincia dall’ultimo checkpoint.', 3200);
+      this.ui.toast(t('toast.respawn'), 3200);
     }
     if (this.respawnT <= 0.6 && !this.fadedIn) { this.fadedIn = true; this.ui.fade(false); }
     if (this.respawnT <= 0) { this.respawnT = 0; this.fadedIn = false; }
@@ -756,10 +791,7 @@ export class WorldScene extends Phaser.Scene {
     ada.teleport(cp.x, cp.y);
     ada.facing = 1;
     this.ui.setResist(ada.resist);
-    const L = this.level;
-    this.guard.reset(L.guard.x, L.guard.y); this.guard.routeI = L.guard.routeI;
-    this.guard2.reset(L.guard2.x, L.guard2.y); this.guard2.routeI = L.guard2.routeI;
-    if (this.recoverer.enabled) this.recoverer.reset(L.recoverer.x, L.recoverer.y);
+    for (const e of this.enemies) if (e.enabled) e.reset();
     this.camX = ada.x; this.camY = ada.y - 200;
     this.ui.clearBarks();
   }
@@ -788,8 +820,9 @@ export class WorldScene extends Phaser.Scene {
       // passers-by say something when Ada goes by
       if (n.bark && near && Math.abs(ada.x - n.x) < 170) {
         n.barkT -= dt;
-        if (n.barkT <= 0 && n.barkI < n.bark.length) {
-          this.ui.bark(n, n.bark[n.barkI], 3800);
+        const lines = tv(n.bark) || [];
+        if (n.barkT <= 0 && n.barkI < lines.length) {
+          this.ui.bark(n, lines[n.barkI], 3800);
           n.barkI++;
           n.barkT = 6;
         }
@@ -803,39 +836,47 @@ export class WorldScene extends Phaser.Scene {
     let best = null, bd = Infinity;
     const ok = ada.state === 'ground' && ada.body.onGround && !ada.frozen;
     const okHide = ok || ada.state === 'hidden';
-    const L = this.level;
+    const L = this.level, F = this.flags;
     const consider = (it, d) => { if (d < bd) { bd = d; best = it; } };
     const same = (y) => Math.abs(ada.y - y) < 40;
+    const dx = (x) => Math.abs(ada.x - x);
     if (ok && !this.heldCan) {
       for (const n of this.npcs) {
-        if (n.talk && same(n.y) && Math.abs(ada.x - n.x) < 110) consider({ kind: 'talk', npc: n, label: n.id === 'fausto' ? 'Parla con Fausto' : 'Parla con la donna' }, Math.abs(ada.x - n.x));
+        if (n.talk && same(n.y) && dx(n.x) < 110) consider({ kind: 'talk', npc: n, act: n.id === 'fausto' ? 'talkFausto' : 'talkMarta' }, dx(n.x));
       }
-      if (same(L.desk.y) && Math.abs(ada.x - L.desk.x) < 66) consider({ kind: 'desk', label: 'Esamina la scrivania' }, Math.abs(ada.x - L.desk.x));
-      if (!this.flags.clue && same(600) && Math.abs(ada.x - L.jar.x) < 44) consider({ kind: 'jar', label: 'Esamina il barattolo' }, Math.abs(ada.x - L.jar.x) - 5);
-      if (!this.flags.sketch && Math.abs(ada.y - L.sketch.y) < 30 && Math.abs(ada.x - L.sketch.x) < 50) consider({ kind: 'sketch', label: 'Guarda il foglio' }, Math.abs(ada.x - L.sketch.x));
+      if (same(L.desk.y) && dx(L.desk.x) < 66) consider({ kind: 'desk', act: 'desk' }, dx(L.desk.x));
+      if (!F.clue && same(600) && dx(L.jar.x) < 44) consider({ kind: 'shelf', act: 'shelf' }, dx(L.jar.x) - 5);
+      if (same(L.panel.at) && dx(L.panel.x) < 44) consider({ kind: 'panel', act: 'panel' }, dx(L.panel.x));
+      if (!this.pz.scraps.has(1) && same(L.basket.at) && dx(L.basket.x) < 36) consider({ kind: 'basket', act: 'basket' }, dx(L.basket.x) + 2);
+      if (!F.trunk && same(L.trunk.at) && dx(L.trunk.x) < 70) consider({ kind: 'trunk', act: 'trunk' }, dx(L.trunk.x));
+      if (!F.pala && Math.abs(ada.y - L.pala.y) < 30 && dx(L.pala.x) < L.pala.w / 2) consider({ kind: 'pala', act: F.trunk ? 'palaCompare' : 'palaLook' }, dx(L.pala.x) + 6);
+      for (const s of this.scrapItems) {
+        if (!this.pz.scraps.has(s.n) && same(s.at) && dx(s.x) < 40) consider({ kind: 'scrap', scrap: s, act: 'scrap' }, dx(s.x) - 4);
+      }
+      if (!F.sketch && Math.abs(ada.y - L.sketch.y) < 30 && dx(L.sketch.x) < 50) consider({ kind: 'sketch', act: 'sketch' }, dx(L.sketch.x));
       for (const c of this.cans) {
         if (c.state !== 'rest') continue;
-        if (same(c.y) && Math.abs(ada.x - c.x) < 40) consider({ kind: 'pickup', can: c, label: 'Raccogli la lattina' }, Math.abs(ada.x - c.x) + 8);
+        if (same(c.y) && dx(c.x) < 40) consider({ kind: 'pickup', can: c, act: 'can' }, dx(c.x) + 8);
       }
       for (const p of L.portals) {
-        if (same(p.y) && Math.abs(ada.x - p.x) < p.w / 2) consider({ kind: 'portal', portal: p, label: p.label }, Math.abs(ada.x - p.x) + 4);
+        if (same(p.y) && dx(p.x) < p.w / 2) consider({ kind: 'portal', portal: p, act: p.act }, dx(p.x) + 4);
       }
       for (const ex of L.exits) {
-        if (ex.label && same(ex.y) && Math.abs(ada.x - ex.x) < ex.w / 2) consider({ kind: 'exit', exit: ex, label: ex.label }, Math.abs(ada.x - ex.x));
+        if (ex.act && same(ex.y) && dx(ex.x) < ex.w / 2) consider({ kind: 'exit', exit: ex, act: ex.act }, dx(ex.x));
       }
       const c = this.cart;
-      if (same(c.y) && Math.abs(c.vx) < 20 && Math.abs(ada.x - c.x) < 70 && Math.abs(ada.x - c.x) > 28) consider({ kind: 'cart', label: 'Spingi il carrello' }, Math.abs(ada.x - c.x) + 12);
+      if (same(c.y) && Math.abs(c.vx) < 20 && dx(c.x) < 70 && dx(c.x) > 28) consider({ kind: 'cart', act: 'cart' }, dx(c.x) + 12);
     }
-    if (ok && this.heldCan) consider({ kind: 'throw', label: 'Lancia la lattina' }, 999);
+    if (ok && this.heldCan) consider({ kind: 'throw', act: 'throw' }, 999);
     if (okHide && ada.state !== 'hidden') {
       for (const h of L.hides) {
         if (Math.abs(ada.y - h.y) > 40) continue;
-        if (ada.x > h.x - 6 && ada.x < h.x + h.w + 6) consider({ kind: 'hide', spot: h, label: h.label }, Math.abs(ada.x - (h.x + h.w / 2)) + 20);
+        if (ada.x > h.x - 6 && ada.x < h.x + h.w + 6) consider({ kind: 'hide', spot: h, act: h.act }, Math.abs(ada.x - (h.x + h.w / 2)) + 20);
       }
     }
     if (ada.state === 'hidden') best = null;
     if (best && best.kind === 'cart') this.showHint('cart');
-    this.ui.prompt(best ? best.label : null);
+    this.ui.prompt(best ? t('act.' + best.act + '.l') : null, best ? t('act.' + best.act + '.v') : null);
     if (best && this.inp.pressed('action')) {
       this.inp.consume('action');
       this.interact(best);
@@ -844,22 +885,43 @@ export class WorldScene extends Phaser.Scene {
 
   interact(it) {
     const ada = this.ada, L = this.level;
+    const face = (x) => { ada.facing = sign(x - ada.x) || ada.facing; };
     switch (it.kind) {
       case 'talk': if (it.npc.id === 'fausto') this.talkFausto(); else this.talkMarta(); break;
       case 'desk':
-        ada.facing = sign(L.desk.x - ada.x) || ada.facing;
+        face(L.desk.x);
         ada.doBusy('examine', 0.6, (u) => A.reach(u), 0.34, () => this.examineDesk());
         break;
-      case 'jar':
-        ada.facing = sign(L.jar.x - ada.x) || ada.facing;
-        ada.doBusy('examine', 0.62, (u) => A.reach(u), 0.34, () => this.examineJar());
+      case 'shelf':
+        face(L.jar.x);
+        ada.doBusy('examine', 0.62, (u) => A.reach(u), 0.34, () => this.openShelf());
+        break;
+      case 'panel':
+        face(L.panel.x);
+        ada.doBusy('examine', 0.6, (u) => A.reach(u), 0.34, () => this.examinePanel());
+        break;
+      case 'basket':
+        face(L.basket.x);
+        ada.doBusy('pickup', 0.5, (u) => A.pickup(u), 0.26, () => { this.snd.play('rustle'); this.gainScrap(1); });
+        break;
+      case 'trunk':
+        face(L.trunk.x);
+        ada.doBusy('pickup', 0.5, (u) => A.pickup(u), 0.3, () => this.openTrunk());
+        break;
+      case 'pala':
+        face(L.pala.x);
+        ada.doBusy('examine', 0.6, (u) => A.reach(u), 0.34, () => this.lookPala());
+        break;
+      case 'scrap':
+        face(it.scrap.x);
+        ada.doBusy('examine', 0.5, (u) => A.reach(u), 0.28, () => this.gainScrap(it.scrap.n));
         break;
       case 'sketch':
-        ada.facing = sign(L.sketch.x - ada.x) || ada.facing;
+        face(L.sketch.x);
         ada.doBusy('examine', 0.6, (u) => A.pickup(u), 0.3, () => this.examineSketch());
         break;
       case 'pickup':
-        ada.facing = sign(it.can.x - ada.x) || ada.facing;
+        face(it.can.x);
         ada.doBusy('pickup', 0.42, (u) => A.pickup(u), 0.2, () => {
           it.can.state = 'held';
           this.heldCan = it.can;
@@ -884,13 +946,13 @@ export class WorldScene extends Phaser.Scene {
       }
       case 'portal': this.startPortal(it.portal); break;
       case 'exit':
-        if (!this.flags.clue) { this.ui.toast('Non me ne vado senza sapere cosa cercava Lale.', 3000); break; }
+        if (!this.flags.clue) { this.ui.toast(t('toast.notYet'), 3000); break; }
         this.finish(it.exit.id);
         break;
       case 'cart': {
         const dir = sign(this.cart.x - ada.x) || ada.facing;
         ada.facing = dir;
-        ada.doBusy('push', 0.36, (u, t) => A.push(t), 0.14, () => {
+        ada.doBusy('push', 0.36, (u, tt) => A.push(tt), 0.14, () => {
           this.cart.vx = dir * 520;
           this.snd.play('thud', 0.6, { x: this.cart.x, y: this.cart.y - 30 });
           this.noise(this.cart.x, this.cart.y - 20, NOISE.cart, 'cart', ada);
@@ -937,6 +999,7 @@ export class WorldScene extends Phaser.Scene {
     c.vx = Math.sign(c.vx) * Math.max(0, Math.abs(c.vx) - 360 * dt);
     c.img.x = c.x;
     c.img.y = c.y + 2 - Math.abs(Math.sin(c.x * 0.15)) * 1.2;
+    c.img.setTint(this.lightAt(c.x, c.y - 40, null, true).tint);
     if (Math.abs(c.vx) > 160) {
       for (const e of this.enemies) {
         if (!e.enabled || e.ko || Math.abs(e.x - c.x) > 46 || Math.abs(e.y - c.y) > 40) continue;
@@ -1004,6 +1067,7 @@ export class WorldScene extends Phaser.Scene {
       }
       c.img.setPosition(c.x, c.y);
       c.img.rotation += c.vx * dt * 0.03;
+      c.img.setTint(this.lightAt(c.x, c.y - 10, null, true).tint);
       if (c.state === 'rest') c.img.rotation = 0;
     }
   }
@@ -1023,20 +1087,12 @@ export class WorldScene extends Phaser.Scene {
     const f = this.fausto;
     this.faceEachOther(f);
     const first = !this.flags.fausto;
-    const lines = first ? [
-      { who: 'Fausto', text: 'Lei è l’amica di Lale? … Era strana, ultimamente. Confrontava vecchie foto per ore.' },
-      { who: 'Fausto', text: 'Tre giorni fa una guardia l’ha vista entrare di notte nel convento. Dopo le otto l’ala restauri è chiusa: la tessera non basta.' },
-      { who: 'Ada', text: 'Il suo laboratorio è là dentro?' },
-      { who: 'Fausto', text: 'In fondo al chiostro, dopo il loggiato. La guardia fa il giro con la lanterna: se cammina piano, non la sente.' },
-    ] : [
-      { who: 'Fausto', text: 'I frati, quando arrivavano i soldati, sparivano dalla cripta e ricomparivano fuori dalle mura. Così raccontava mio nonno.' },
-    ];
-    this.ui.dialog(lines, () => {
+    this.ui.dialog(tv(first ? 'dlg.fausto1' : 'dlg.fausto2'), () => {
       f.talking = false;
       if (first) {
         this.flags.fausto = true;
-        this.addDossier('fausto', 'Fausto, restauratore', 'Lale confrontava vecchie foto per ore. Tre giorni fa una guardia l’ha vista entrare di notte nell’ala restauri, chiusa dopo le otto.');
-        if (!this.flags.desk && !this.flags.clue) this.objective('Raggiungi il laboratorio di Lale, in fondo al chiostro.');
+        this.addDossier('fausto');
+        if (!this.flags.desk && !this.flags.clue) this.objective('obj.lab');
         this.saveGame();
       }
     });
@@ -1046,59 +1102,158 @@ export class WorldScene extends Phaser.Scene {
     const m = this.marta;
     this.faceEachOther(m);
     const first = !this.flags.marta;
-    const lines = first ? [
-      { who: 'Donna col trench', text: 'Entra là dentro a quest’ora? Coraggiosa.' },
-      { who: 'Ada', text: 'Cerco un’amica. Lavora nel laboratorio di restauro.' },
-      { who: 'Donna col trench', text: 'Allora le dica di stare attenta. Di notte da quel portone escono casse da imballaggio. Sempre la stessa sigla sul legno: P A.' },
-      { who: 'Ada', text: 'Lei chi è?' },
-      { who: 'Donna col trench', text: 'Una che fotografa i portoni. Buona serata.' },
-    ] : [
-      { who: 'Donna col trench', text: 'Le casse escono sempre di notte. Io non l’ho vista, d’accordo?' },
-    ];
-    this.ui.dialog(lines, () => {
+    this.ui.dialog(tv(first ? 'dlg.marta1' : 'dlg.marta2'), () => {
       m.talking = false;
       if (first) {
         this.flags.marta = true;
-        this.addDossier('marta', 'La donna col trench', 'Fotografava il convento. Dice che di notte dal portone escono casse da imballaggio con la sigla «PA».');
+        this.addDossier('marta');
         this.saveGame();
       }
     });
   }
 
+  riddleCard() {
+    return { art: 'note', sound: 'note', title: t('card.riddle.t'), text: t('card.riddle.x'), note: tv('riddle.lines').join('\n'), verse: true };
+  }
+
+  // Lale's desk: emptied, but with a note taped under the drawer (the riddle of the jars).
   examineDesk() {
     const first = !this.flags.desk;
-    this.ui.examine([{ art: 'desk', title: 'La scrivania di Lale', text: 'Svuotata. Qualcuno è passato prima di me.', note: first ? 'Poi Ada ricorda la nonna: «I segreti si tengono nel barattolo della vernice». La lampada UV accanto agli scaffali è ancora accesa.' : '' }], () => {
+    const cards = first
+      ? [{ art: 'desk', title: t('card.desk.t'), text: t('card.desk.x'), note: t('card.desk.n') }, this.riddleCard()]
+      : [{ art: 'desk', title: t('card.desk.t'), text: t('card.desk.x') }, this.riddleCard()];
+    this.ui.examine(cards, () => {
       if (!first) return;
       this.flags.desk = true;
-      this.addDossier('desk', 'La scrivania svuotata', 'Qualcuno ha portato via i quaderni di Lale prima di Ada. La lampada UV vicino agli scaffali dei barattoli era rimasta accesa.');
-      if (!this.flags.clue) this.objective('I segreti si tengono nel barattolo della vernice: guarda tra i barattoli sotto la lampada UV.');
+      this.flags.riddle = true;
+      this.addDossier('desk', false);
+      this.addDossier('riddle');
+      if (!this.flags.clue) this.objective('obj.jars');
       this.saveGame();
+    });
+  }
+
+  // The shelf of resins under the UV lamp: one jar hides the memory card.
+  openShelf() {
+    const L = this.level;
+    this.ui.pz.openJars({
+      riddle: this.flags.riddle,
+      tried: this.pz.jarsTried,
+      onPick: (i) => {
+        if (i === JAR_ANSWER) return 'right';
+        // a squeaky lid: whoever is near hears it
+        this.pz.jarsTried.add(i);
+        this.noise(L.jar.x, L.jar.y, NOISE.jar, 'jar', this.ada);
+        this.saveGame();
+        return 'wrong';
+      },
+      onDone: () => this.examineJar(),
     });
   }
 
   examineJar() {
     this.ui.examine([
-      { art: 'jar', sound: 'clue', title: 'Un barattolo di resina dammar', text: 'Sotto la luce UV la resina brilla, e sul coperchio c’è un’impronta fresca. Tra i cristalli, una scheda di memoria avvolta nella cera.', note: 'Lale sapeva che qualcuno sarebbe venuto a svuotarle la scrivania.' },
-      { art: 'card', title: 'La scheda di Lale', text: 'Riflettografie di sette opere tornate dal restauro: sotto la pittura il disegno originale non c’è più. Tutte spedite a un «laboratorio esterno PA».', note: 'In fondo, una nota di Lale: «Chi dipinge così bene? Studio Lisi?»' },
+      { art: 'jar', sound: 'clue', title: t('card.jar.t'), text: t('card.jar.x'), note: t('card.jar.n') },
+      { art: 'card', title: t('card.card.t'), text: t('card.card.x'), note: t('card.card.n') },
     ], () => {
       this.flags.clue = true;
       this.jarGlow.setVisible(false);
-      this.addDossier('scheda', 'Scheda di memoria di Lale', 'Riflettografie di sette opere tornate dal restauro senza il disegno sottostante. Tutte spedite a un «laboratorio esterno PA». Nota: «Chi dipinge così bene? Studio Lisi?»');
-      this.objective('Esci dal convento con la scheda.');
+      this.addDossier('scheda');
+      this.objective('obj.exit');
       this.spawnRecoverer();
       this.snd.play('door', 0.8, { x: this.level.recoverer.x, y: 540 });
-      this.ui.toast('Una porta sbatte, lontano. Qualcuno è entrato nel chiostro.', 3400);
+      this.ui.toast(t('toast.doorSlam'), 3400);
       this.saveGame();
     });
   }
 
   examineSketch() {
-    this.ui.examine([{ art: 'sketch', sound: 'note', title: 'Un foglio sull’impalcatura', text: 'Uno schizzo a matita: un faro su un promontorio. Accanto, due lettere: «PA».', note: 'La firma è una L. La calligrafia è quella di Lale.' }], () => {
+    this.ui.examine([{ art: 'sketch', sound: 'note', title: t('card.sketch.t'), text: t('card.sketch.x'), note: t('card.sketch.n') }], () => {
       this.flags.sketch = true;
       this.sketchImg.setVisible(false);
-      this.addDossier('schizzo', 'Lo schizzo del faro', 'Un disegno di Lale nascosto sull’impalcatura della navata: un faro su un promontorio, con la sigla «PA».');
+      this.addDossier('schizzo');
       this.saveGame();
     });
+  }
+
+  // The test panel on Lale's workbench: under UV light, four retouched digits (the trunk's code).
+  examinePanel() {
+    this.ui.examine([
+      { art: 'panel', title: t('card.panel.t'), text: t('card.panel.x'), note: t('card.panel.n') },
+      { art: 'panelUV', sound: 'note', title: t('card.panelUV.t'), text: t('card.panelUV.x'), note: t('card.panelUV.n') },
+    ], () => {
+      if (this.flags.panel) return;
+      this.flags.panel = true;
+      this.addDossier('tavoletta');
+      this.saveGame();
+    });
+  }
+
+  // The trunk in the loft, closed with a combination padlock.
+  openTrunk() {
+    this.ui.pz.openLock({
+      digits: this.pz.lockDigits,
+      onDone: () => {
+        this.flags.trunk = true;
+        this.ui.examine([{ art: 'photo', sound: 'clue', title: t('card.photo.t'), text: t('card.photo.x'), note: t('card.photo.n') }], () => {
+          this.addDossier('baule');
+          this.gainScrap(2);
+          this.saveGame();
+        });
+      },
+      onClose: () => this.saveGame(),
+    });
+  }
+
+  // The altarpiece under its sheet on the scaffolding: compared with the 1998 photo, it is a copy.
+  lookPala() {
+    if (!this.flags.trunk) {
+      this.ui.examine([{ art: 'pala', title: t('card.pala.t'), text: t('card.pala.x'), note: t('card.pala.n') }]);
+      return;
+    }
+    this.ui.pz.openDiff({
+      found: this.pz.diffFound,
+      onFound: () => this.saveGame(),
+      onDone: () => {
+        this.flags.pala = true;
+        this.addDossier('pala');
+        this.saveGame();
+      },
+      onClose: () => this.saveGame(),
+    });
+  }
+
+  // A piece of Lale's torn letter (1 basket, 2 trunk, 3 crypt, 4 aqueduct).
+  gainScrap(n) {
+    if (this.pz.scraps.has(n)) return;
+    this.pz.scraps.add(n);
+    const c = this.pz.scraps.size;
+    const it = this.scrapItems.find((s) => s.n === n);
+    if (it) it.img.setVisible(false);
+    this.snd.play('page');
+    this.ui.toast(t('toast.scrap', { n: c }), 3400);
+    const act = c >= 4 && !this.flags.letter ? 'scraps' : null;
+    if (!this.dossier.some((d) => d.id === 'foglio')) this.addDossier('foglio', false, { n: c }, act);
+    else this.updateDossier('foglio', { n: c }, act);
+    this.saveGame();
+    if (c >= 4 && !this.flags.letter) setTimeout(() => { if (!this.ui.modal && this.mode === 'play' && this.sys.isActive()) this.openScraps(); }, 500);
+  }
+
+  openScraps() {
+    if (this.pz.scraps.size < 4) return;
+    this.ui.pz.openScraps({
+      placed: this.pz.placed,
+      onPlace: () => { if (this.pz.placed.size >= 4) this.letterDone(); else this.saveGame(); },
+      onClose: () => this.saveGame(),
+    });
+  }
+
+  letterDone() {
+    if (this.flags.letter) return;
+    this.flags.letter = true;
+    this.updateDossier('foglio', { n: 4 }, null);
+    this.addDossier('lettera');
+    this.saveGame();
   }
 
   // The man sent to take the card back waits in the cloister.
@@ -1117,8 +1272,8 @@ export class WorldScene extends Phaser.Scene {
     if (reg !== this.region) {
       this.region = reg;
       this.snd.setRegion(reg.material, !!reg.sky, reg.id);
-      if (reg.name && !this.areasSeen.has(reg.id)) { this.areasSeen.add(reg.id); this.ui.area(reg.name); }
-      if (reg.id === 'cloister' && !this.flags.fausto && !this.flags.desk && !this.flags.clue) this.objective('Raggiungi il laboratorio di Lale, in fondo al chiostro.');
+      if (reg.name && !this.areasSeen.has(reg.id)) { this.areasSeen.add(reg.id); this.ui.area(t(reg.name)); }
+      if (reg.id === 'cloister' && !this.flags.fausto && !this.flags.desk && !this.flags.clue && this.objKey !== 'obj.lab') this.objective('obj.lab');
     }
     // hints, once each
     for (const h of L.hints) {
@@ -1132,7 +1287,7 @@ export class WorldScene extends Phaser.Scene {
       this.showHint(h.id);
       if (h.id === 'crypt' && !this.flags.crypt) {
         this.flags.crypt = true;
-        this.addDossier('casse', 'Le casse della cripta', 'Nella cripta sotto la chiesa ci sono casse da imballaggio per quadri, tutte con la sigla «PA».', false);
+        this.addDossier('casse', false);
       }
       break;
     }
@@ -1157,22 +1312,29 @@ export class WorldScene extends Phaser.Scene {
   showHint(id) {
     if (this.hintsShown.has(id)) return;
     this.hintsShown.add(id);
-    const h = HINTS[id];
+    const h = tv('hint.' + id);
     if (!h) return;
-    const dev = this.inp.lastDevice === 'touch' || this.ui.isTouch ? 'touch' : this.inp.lastDevice === 'pad' ? 'pad' : 'kb';
-    this.ui.toast(h.all || h[dev] || h.kb, 5600);
+    this.ui.toast(h.all || h[this.ui.device()] || h.kb, 5600);
   }
 
-  objective(text, flash = true) {
-    this.objectiveText = text;
-    this.ui.objective(text, flash);
+  objective(key, flash = true) {
+    this.objKey = key;
+    this.ui.objective(t(key), flash);
   }
 
-  addDossier(id, title, text, notify = true) {
+  addDossier(id, notify = true, vars = null, act = null) {
     if (this.dossier.some((d) => d.id === id)) return;
-    this.dossier.push({ id, title, text });
-    this.ui.addDossier({ id, title, text });
-    if (notify) { this.snd.play('page'); this.ui.toast('Dossier aggiornato: ' + title, 2600); }
+    const e = { id, vars, act };
+    this.dossier.push(e);
+    this.ui.addDossier(e);
+    if (notify) { this.snd.play('page'); this.ui.toast(t('toast.dossier', { t: t('dos.' + id + '.t', vars) }), 2600); }
+  }
+
+  updateDossier(id, vars, act) {
+    const e = this.dossier.find((d) => d.id === id);
+    if (!e) return;
+    e.vars = vars; e.act = act;
+    this.ui.updateDossier(id, vars, act);
   }
 
   finish(exitId) {
@@ -1183,22 +1345,24 @@ export class WorldScene extends Phaser.Scene {
     this.ui.prompt(null);
     this.snd.play(exitId === 'giardino' ? 'gate' : 'door');
     this.clearSave();
-    const s = this.stats;
+    const s = this.stats, F = this.flags;
     const mm = Math.floor(s.time / 60), ss = Math.floor(s.time % 60);
     const secret = exitId === 'giardino';
-    const title = secret ? 'Uscita dal giardino dietro l’abside' : 'Uscita dal portone del convento';
-    const text = secret
-      ? 'Ada ha trovato il passaggio sotto la chiesa ed è uscita da dove nessuno la aspettava, con la scheda di Lale in borsa.'
-      : 'Ada è uscita dal portone di San Domenico con la scheda di Lale in borsa.';
+    const solved = [F.clue, F.trunk, F.pala, F.letter].filter(Boolean).length;
+    const found = (v) => (v ? t('end.found') : t('end.notFound'));
     const stats = [
-      ['Tempo', `${mm}:${String(ss).padStart(2, '0')}`],
-      ['Volte che ti hanno vista', String(s.spotted)],
-      ['Avversari messi a terra', String(s.kos)],
-      ['Passaggio segreto', this.flags.secret ? 'trovato' : 'non trovato'],
-      ['Schizzo sull’impalcatura', this.flags.sketch ? 'trovato' : 'non trovato'],
+      [t('end.time'), `${mm}:${String(ss).padStart(2, '0')}`],
+      [t('end.spotted'), String(s.spotted)],
+      [t('end.kos'), String(s.kos)],
+      [t('end.puzzles'), `${solved}/4`],
+      [t('end.secret'), found(F.secret)],
+      [t('end.sketch'), found(F.sketch)],
     ];
     this.ui.fade(true);
-    setTimeout(() => { this.ui.showEnd(title, text, stats); this.ui.fade(false); }, 900);
+    setTimeout(() => {
+      this.ui.showEnd(t(secret ? 'end.titleSecret' : 'end.titleDoor'), t(secret ? 'end.textSecret' : 'end.textDoor'), stats);
+      this.ui.fade(false);
+    }, 900);
   }
 
   // ------------------------------------------------------------ misc
@@ -1231,7 +1395,9 @@ export class WorldScene extends Phaser.Scene {
         return {
           mode: scene.mode, modal: scene.ui.modal, ada: { x: Math.round(a.x), y: Math.round(a.y), state: a.state, resist: a.resist, light: +a.light.toFixed(2), hide: a.hide ? a.hide.id : null },
           enemies: scene.enemies.map((e) => ({ id: e.id, state: e.state, S: +e.S.toFixed(2), x: Math.round(e.x), y: Math.round(e.y), hp: e.hp, enabled: e.enabled })),
-          flags: { ...scene.flags }, checkpoint: scene.checkpoint.id, objective: scene.objectiveText,
+          flags: { ...scene.flags }, checkpoint: scene.checkpoint.id, objective: scene.objKey,
+          pz: { tried: [...scene.pz.jarsTried], lock: scene.pz.lockDigits.join(''), diff: [...scene.pz.diffFound], scraps: [...scene.pz.scraps], placed: [...scene.pz.placed] },
+          prompt: scene.ui.promptLabel,
         };
       },
     };

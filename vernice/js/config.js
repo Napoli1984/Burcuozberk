@@ -41,6 +41,7 @@ export const COMBAT = {
 export const NOISE = {
   walk: 0, run: 230, land: 260, hardLand: 420, punch: 360, kick: 380, fight: 1100,
   wall: 620, crack: 520, throwLand: 430, cart: 380, body: 300,
+  jar: 320,               // a lid squeaking when Ada opens the wrong jar
 };
 
 export const STEALTH = {

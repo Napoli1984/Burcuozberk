@@ -77,17 +77,18 @@ export function buildLevel5() {
     { x0: ch + 1275, y0: 459, x1: ch + 1594, y1: 452 },
   ];
 
+  // name: key of the place name in the language tables (shown once, when Ada first gets there)
   const regions = [
-    { id: 'street', x0: 0, x1: X.w1, y0: -200, y1: 1100, ambient: 0.46, color: [150, 168, 220], sky: true, material: 'cobble', name: 'Via di San Domenico' },
-    { id: 'cloister', x0: X.w1, x1: cl + 1500, y0: -200, y1: 1100, ambient: 0.36, color: [170, 160, 200], material: 'stone', name: 'Il chiostro' },
+    { id: 'street', x0: 0, x1: X.w1, y0: -200, y1: 1100, ambient: 0.46, color: [150, 168, 220], sky: true, material: 'cobble', name: 'area.street' },
+    { id: 'cloister', x0: X.w1, x1: cl + 1500, y0: -200, y1: 1100, ambient: 0.36, color: [170, 160, 200], material: 'stone', name: 'area.cloister' },
     { id: 'garden', x0: cl + 1500, x1: cl + 2600, y0: -200, y1: 1100, ambient: 0.48, color: [140, 165, 225], sky: true, material: 'grass' },
     { id: 'loggia', x0: cl + 2600, x1: X.w2, y0: -200, y1: 1100, ambient: 0.36, color: [170, 160, 200], material: 'stone' },
-    { id: 'lab', x0: X.w2, x1: X.w3, y0: -200, y1: 1100, ambient: 0.3, color: [170, 150, 190], material: 'wood', name: 'Il laboratorio' },
-    { id: 'nave', x0: X.w3, x1: X.w4, y0: -200, y1: 640, ambient: 0.32, color: [140, 155, 210], material: 'stone', name: 'La navata' },
-    { id: 'crypt', x0: ch, x1: X.w4, y0: 640, y1: 1100, ambient: 0.22, color: [160, 145, 140], material: 'stone', name: 'La cripta' },
-    { id: 'aqueduct', x0: X.w4, x1: width, y0: 700, y1: 1100, ambient: 0.24, color: [150, 130, 120], material: 'stone', name: 'L’acquedotto' },
+    { id: 'lab', x0: X.w2, x1: X.w3, y0: -200, y1: 1100, ambient: 0.3, color: [170, 150, 190], material: 'wood', name: 'area.lab' },
+    { id: 'nave', x0: X.w3, x1: X.w4, y0: -200, y1: 640, ambient: 0.32, color: [140, 155, 210], material: 'stone', name: 'area.nave' },
+    { id: 'crypt', x0: ch, x1: X.w4, y0: 640, y1: 1100, ambient: 0.22, color: [160, 145, 140], material: 'stone', name: 'area.crypt' },
+    { id: 'aqueduct', x0: X.w4, x1: width, y0: 700, y1: 1100, ambient: 0.24, color: [150, 130, 120], material: 'stone', name: 'area.aqueduct' },
     { id: 'channel', x0: aq + 760, x1: width, y0: 700, y1: 1100, ambient: 0.24, color: [120, 140, 175], material: 'water' },
-    { id: 'garden2', x0: aq, x1: width, y0: -200, y1: 700, ambient: 0.48, color: [140, 165, 225], sky: true, material: 'grass', name: 'Il giardino dietro l’abside' },
+    { id: 'garden2', x0: aq, x1: width, y0: -200, y1: 700, ambient: 0.48, color: [140, 165, 225], sky: true, material: 'grass', name: 'area.garden2' },
   ];
 
   const W_ = (r, g, b) => [r, g, b];
@@ -117,13 +118,14 @@ export function buildLevel5() {
   ];
 
   // Hiding places: Ada slips behind them; the painted piece in front of her is in bgdata.js (fronts).
+  // act: key of the action label in the language tables
   const hides = [
-    { id: 'siepe-1', x: cl + 1900, y: 600, w: 225, label: 'Nasconditi nella siepe' },
-    { id: 'siepe-2', x: cl + 2330, y: 600, w: 235, label: 'Nasconditi nella siepe' },
-    { id: 'tela', x: lab + 776, y: 600, w: 62, label: 'Nasconditi dietro le tele' },
-    { id: 'tele', x: lab + 1012, y: 600, w: 78, label: 'Nasconditi dietro le tele' },
-    { id: 'tenda', x: ch + 1010, y: 600, w: 170, label: 'Nasconditi dietro la tenda' },
-    { id: 'casse', x: ch + 905, y: 900, w: 222, label: 'Nasconditi dietro le casse' },
+    { id: 'siepe-1', x: cl + 1900, y: 600, w: 225, act: 'hideHedge' },
+    { id: 'siepe-2', x: cl + 2330, y: 600, w: 235, act: 'hideHedge' },
+    { id: 'tela', x: lab + 776, y: 600, w: 62, act: 'hideCanvas' },
+    { id: 'tele', x: lab + 1012, y: 600, w: 78, act: 'hideCanvas' },
+    { id: 'tenda', x: ch + 1010, y: 600, w: 170, act: 'hideCurtain' },
+    { id: 'casse', x: ch + 905, y: 900, w: 222, act: 'hideCrates' },
   ];
 
   const checkpoints = [
@@ -138,32 +140,54 @@ export function buildLevel5() {
 
   // Doors in the painted walls that lead somewhere else (fade, then Ada comes out at the other end).
   const portals = [
-    { id: 'loggia-door', x: cl + 3560, y: 340, w: 70, to: 'loft-door', label: 'Entra nella soffitta' },
-    { id: 'loft-door', x: lab + 570, y: 310, w: 56, to: 'loggia-door', label: 'Esci sul loggiato' },
+    { id: 'loggia-door', x: cl + 3560, y: 340, w: 70, to: 'loft-door', act: 'loft' },
+    { id: 'loft-door', x: lab + 570, y: 310, w: 56, to: 'loggia-door', act: 'loggia' },
   ];
 
   const exits = [
     { id: 'portone', x0: X.w1 - 40, x1: X.w1 + 10, y: 600 },        // back through the convent door
-    { id: 'giardino', x: aq + 1302, y: 480, w: 120, label: 'Esci dal cancello' },
+    { id: 'giardino', x: aq + 1302, y: 480, w: 120, act: 'gate' },
+  ];
+
+  // The people who guard (or rob) the convent at night. rig: picture set in img/chars;
+  // kind: their lines; light: what they carry (lantern, torch, headlamp or nothing).
+  const enemies = [
+    { id: 'guard', rig: 'guard', kind: 'guard', light: 'lantern', hp: 7, x: cl + 2100, y: 600,
+      route: [{ x: cl + 1250, wait: 2.6 }, { x: cl + 2150, wait: 1.6 }, { x: cl + 3230, wait: 2.6 }], routeI: 2 },
+    { id: 'guard3', rig: 'guard3', kind: 'guardF', light: 'torch', hp: 6, x: cl + 3150, y: 340,
+      route: [{ x: cl + 2760, wait: 2.4 }, { x: cl + 3190, wait: 1.2 }, { x: cl + 3620, wait: 2.6 }], routeI: 0 },
+    { id: 'thief', rig: 'thief', kind: 'thief', light: 'headlamp', hp: 5, x: lab + 980, y: 600,
+      route: [{ x: lab + 215, wait: 2.2 }, { x: lab + 470, wait: 3.4 }, { x: lab + 1120, wait: 2.4 }], routeI: 1 },
+    { id: 'guard2', rig: 'guard2', kind: 'guard', light: 'torch', hp: 6, x: ch + 700, y: 600,
+      route: [{ x: ch + 300, wait: 2.4 }, { x: ch + 760, wait: 1.4 }, { x: ch + 1230, wait: 2.8 }], routeI: 2 },
+    { id: 'porter1', rig: 'porter1', kind: 'porter', light: null, hp: 6, x: ch + 640, y: 900,
+      route: [{ x: ch + 440, wait: 2.8 }, { x: ch + 880, wait: 2.4 }], routeI: 1 },
+    { id: 'porter2', rig: 'porter2', kind: 'porter', light: null, hp: 5, x: ch + 1320, y: 900,
+      route: [{ x: ch + 1190, wait: 3.2 }, { x: ch + 1500, wait: 2.6 }], routeI: 1 },
   ];
 
   const level = {
-    W, H, tiles, ladders, planks, regions, lights, hides, checkpoints, portals, exits,
+    W, H, tiles, ladders, planks, regions, lights, hides, checkpoints, portals, exits, enemies,
     width, height, ground: 600,
     start: { x: 960, y: 600 },
     npcs: [
-      { id: 'granny', x: 1388, y: 600, facing: 1, h: 114, bark: ['Buonasera, signorina. A quest’ora il convento è chiuso, sa?', 'Chieda a Fausto, il restauratore. Lui sa tutto di tutti.'] },
-      { id: 'flatcap', x: 1915, y: 600, facing: -1, h: 131, bark: ['«Fondazione Ardenzi: sette capolavori tornano a casa.» Bah. A me sembrano uguali a prima.'] },
+      { id: 'granny', x: 1388, y: 600, facing: 1, h: 114, bark: 'npc.granny' },
+      { id: 'flatcap', x: 1915, y: 600, facing: -1, h: 131, bark: 'npc.flatcap' },
       { id: 'fausto', x: 2470, y: 600, facing: -1, h: 128, talk: true },
       { id: 'marta', x: 2870, y: 600, facing: 1, h: 125, talk: true },
     ],
-    guard: { x: cl + 2100, y: 600, route: [{ x: cl + 1250, wait: 2.6 }, { x: cl + 2150, wait: 1.6 }, { x: cl + 3230, wait: 2.6 }], routeI: 2 },
-    guard2: { x: ch + 700, y: 600, route: [{ x: ch + 300, wait: 2.4 }, { x: ch + 760, wait: 1.4 }, { x: ch + 1230, wait: 2.8 }], routeI: 2 },
     recoverer: { x: cl + 1700, y: 600 },
     jar: { x: lab + 632, y: 518 },
     desk: { x: lab + 462, y: 600 },
     sketch: { x: ch + 1540, y: 193 },
     cart: { x: cl + 1620, y: 600 },
+    // puzzles: the test panel on the workbench, the wastebasket under the desk, the trunk in the
+    // loft, the covered altarpiece on the scaffolding, and two more pieces of Lale's torn letter
+    panel: { x: lab + 268, y: 516, at: 600 },
+    basket: { x: lab + 488, y: 601, at: 600 },
+    trunk: { x: lab + 1080, y: 312, at: 310 },
+    pala: { x: ch + 1450, y: 328, w: 220 },
+    scraps: [{ n: 3, x: ch + 1003, y: 844, at: 900 }, { n: 4, x: aq + 300, y: 836, at: 900 }],
     cans: [{ x: cl + 960, y: 600 }, { x: lab + 300, y: 600 }, { x: ch + 1180, y: 900 }],
     hints: [
       { id: 'move', x0: 0, x1: 1400, text: 'move' },

@@ -222,6 +222,20 @@ export class Sound {
       case 'page': this.burst({ filter: 'highpass', f0: 3000, gain: 0.12, a: 0.03, d: 0.16 }); break;
       case 'splash': this.burst({ f0: 900, f1: 400, q: 0.7, gain: 0.25 * k, d: 0.25, pos }); this.tone({ f0: 500, f1: 1100, gain: 0.05 * k, d: 0.08, pos }); break;
       case 'bark': this.burst({ f0: r(240, 320), q: 4, gain: 0.05, d: 0.08, pos }); break;
+      // puzzles
+      case 'tick': this.burst({ f0: r(2400, 2800), q: 5, gain: 0.09, d: 0.02 }); this.tone({ f0: 1900, type: 'triangle', gain: 0.035, d: 0.02 }); break;
+      case 'unlock':
+        this.burst({ f0: 1800, q: 4, gain: 0.18, d: 0.04 });
+        this.tone({ f0: 620, f1: 470, type: 'triangle', gain: 0.12, d: 0.12, delay: 0.05 });
+        this.burst({ filter: 'lowpass', f0: 900, gain: 0.22, d: 0.08, delay: 0.1 });
+        break;
+      case 'nope': this.tone({ f0: 210, f1: 150, type: 'triangle', gain: 0.12, d: 0.16 }); this.burst({ f0: 700, q: 3, gain: 0.08, d: 0.05 }); break;
+      case 'squeak':
+        this.tone({ f0: 760, f1: 1240, type: 'sawtooth', lp: 2600, lpq: 5, gain: 0.045, a: 0.03, d: 0.22 });
+        this.tone({ f0: 1100, f1: 820, type: 'sawtooth', lp: 2400, lpq: 5, gain: 0.035, a: 0.02, d: 0.16, delay: 0.2 });
+        break;
+      case 'found': [76, 83].forEach((n, i) => this.tone({ f0: NOTE(n), type: 'triangle', gain: 0.08, d: 0.5, delay: i * 0.07, echo: true })); break;
+      case 'glass': this.tone({ f0: r(2400, 2600), type: 'triangle', gain: 0.06, d: 0.3 }); this.tone({ f0: r(3600, 3800), gain: 0.03, d: 0.2, delay: 0.01 }); break;
       default: break;
     }
   }

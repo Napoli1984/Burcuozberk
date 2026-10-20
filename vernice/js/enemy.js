@@ -1,49 +1,27 @@
-// The guard with the lantern and the man sent to take the memory card back.
+// The people who keep watch at night: guards with a lantern or a torch, a thief with a headlamp,
+// two porters in the crypt, and the man sent to take the memory card back.
 // States: patrol, suspicious (goes to check a point), alert (chases and fights), search, return,
-// windup/strike/recover (an attack), hurt, ko (stays down). Men cannot climb ladders or ledges.
+// windup/strike/recover (an attack), hurt, ko (stays down). Nobody here can climb ladders or ledges.
 import { STEALTH, TILE } from './config.js';
 import { Body } from './body.js';
 import { Rig } from './rig.js';
 import { A } from './anim.js';
+import { pick } from './i18n.js';
 import { clamp, approach, damp, sign, lerp, rectsOverlap } from './util.js';
 
 const TAU = Math.PI * 2;
 const DEG = Math.PI / 180;
 const SPEED = { patrol: 84, check: 118, hunt: 175, chase: 240, back: 100 };
 const STRIKE = { active: [0.03, 0.12], dur: 0.2, reach: 88, top: 116, bottom: 46, recover: 0.62 };
-
-const LINES = {
-  guard: {
-    see: ['Chi va là?', 'C’è qualcuno?', 'Hm?'],
-    hear: ['Cos’è stato?', 'Che rumore era?', 'Chi c’è?'],
-    alert: ['Ferma!', 'Ehi, tu! Ferma lì!', 'Non muoverti!'],
-    lost: ['Dove sei finita?', 'Esci fuori!', 'So che sei qui.'],
-    calm: ['Sarà stato un gatto.', 'Mi sarò sbagliato.', 'Questo convento mi fa venire i brividi.'],
-    found: ['Trovata!', 'Eccoti!'],
-    body: ['Ehi! Che è successo qui?'],
-    counter: ['Basta!', 'Adesso basta!'],
-    win: ['E resta giù.'],
-  },
-  recoverer: {
-    see: ['Ti vedo…'],
-    hear: ['Sei tu?'],
-    alert: ['Dammi quella scheda!', 'Non scappi.', 'Ferma lì.'],
-    lost: ['Tanto ti trovo.', 'Esci, non ti faccio niente.'],
-    calm: ['Dove si è cacciata…'],
-    found: ['Eccoti.'],
-    body: ['Ehi!'],
-    counter: ['Ora basta!'],
-    win: ['La scheda me la prendo io.'],
-  },
-};
+// view cone half-angle and downward tilt (degrees) for each kind of light
+const CONE = { lantern: [STEALTH.coneAngle / 2, 5], torch: [17, 4], headlamp: [21, 9], none: [50, 10] };
 
 export class Enemy {
   constructor(scene, def, o) {
     this.scene = scene;
     this.map = scene.map;
     this.id = o.id;
-    this.kind = o.kind;
-    this.lines = LINES[o.kind];
+    this.kind = o.kind;                    // which lines it says (barks.<kind> in the language tables)
     this.body = new Body(o.x, o.y, 38, 128);
     this.rig = new Rig(scene, def, { rest: A.idle(0, 'man') });
     this.rig.setDepth(o.depth ?? 24);
@@ -52,10 +30,14 @@ export class Enemy {
     this.route = o.route || null;          // [{x, wait}]
     this.routeI = o.routeI ?? 1;
     this.routeDir = 1;
-    this.lantern = !!o.lantern;
-    this.torch = !!o.torch;            // a narrow, long beam instead of the lantern's glow
-    this.half = (o.lantern ? STEALTH.coneAngle / 2 : o.torch ? 17 : 50) * DEG;
-    this.tilt = (o.lantern ? 5 : o.torch ? 4 : 10) * DEG;
+    this.spawn = { x: o.x, y: o.y, routeI: this.routeI };
+    this.lightKind = o.light || null;      // 'lantern', 'torch', 'headlamp' or null
+    this.lantern = this.lightKind === 'lantern';
+    this.torch = this.lightKind === 'torch';          // a narrow, long beam held in front
+    this.headlamp = this.lightKind === 'headlamp';    // a beam from the forehead, a little shorter
+    const [half, tilt] = CONE[this.lightKind || 'none'];
+    this.half = half * DEG;
+    this.tilt = tilt * DEG;
     this.alertness = 1;
     this.state = o.state || 'patrol';
     this.t = 0;
@@ -97,10 +79,10 @@ export class Enemy {
 
   bark(kind, force = false) {
     if (!force && this.barkT > 0) return;
-    const list = this.lines[kind];
-    if (!list) return;
+    const line = pick(`barks.${this.kind}.${kind}`);
+    if (!line) return;
     this.barkT = 2.6;
-    this.scene.bark(this, list[Math.floor(Math.random() * list.length)]);
+    this.scene.bark(this, line);
   }
 
   enable(x, y) {
@@ -110,8 +92,9 @@ export class Enemy {
   }
 
   // Back to the start of the patrol (used when Ada is beaten and starts again from a checkpoint).
-  reset(x, y) {
+  reset(x = this.spawn.x, y = this.spawn.y) {
     if (this.ko || !this.enabled) return;
+    this.routeI = this.spawn.routeI;
     this.body.x = x; this.body.y = y; this.body.vx = 0; this.body.vy = 0;
     this.S = 0; this.last = null; this.goal = null; this.knowsHide = null; this.seenT = 99;
     this.hp = Math.max(this.hp, Math.ceil(this.maxHp * 0.6));
@@ -120,15 +103,23 @@ export class Enemy {
   }
 
   // ------------------------------------------------------------ senses
+  // Where the light (and the view cone) starts: the lantern, the torch's lens or the headlamp.
+  lightPoint() {
+    const r = this.rig;
+    if (this.lantern && r.lanternPos.x) return { x: r.lanternPos.x, y: r.lanternPos.y - 6 };
+    if (this.torch && r.handPos.x) return { x: r.handPos.x + this.facing * (r.b.torchTip ?? 30), y: r.handPos.y + 2 };
+    if (this.headlamp && r.lampPos.x) return { x: r.lampPos.x + this.facing * 3, y: r.lampPos.y };
+    return null;
+  }
+
   eyePoint() {
-    if (this.lantern && this.rig.lanternPos.x) return { x: this.rig.lanternPos.x, y: this.rig.lanternPos.y - 6 };
-    if (this.torch && this.rig.handPos.x) return { x: this.rig.handPos.x + this.facing * 30, y: this.rig.handPos.y + 2 };
-    return { x: this.rig.headPos.x || this.body.x, y: (this.rig.headPos.y || this.body.y - 116) + 6 };
+    return this.lightPoint() || { x: this.rig.headPos.x || this.body.x, y: (this.rig.headPos.y || this.body.y - 116) + 6 };
   }
 
   sightRange(light) {
     const k = clamp((light - 0.35) / 0.65, 0, 1);
-    return lerp(STEALTH.rangeDark, STEALTH.rangeLit, k) * this.alertness * (this.aware ? 1.25 : 1) * (this.torch ? 1.3 : 1);
+    const beam = this.torch ? 1.3 : this.headlamp ? 1.15 : 1;
+    return lerp(STEALTH.rangeDark, STEALTH.rangeLit, k) * this.alertness * (this.aware ? 1.25 : 1) * beam;
   }
 
   // Can this man see the point (in front, inside the view angle, nothing in between)?

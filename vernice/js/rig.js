@@ -63,6 +63,7 @@ export class Rig {
     this.fill = null;
     this.footPts = this.b.foot || opts.footPts || [[-3.4, 10.6], [15.5, 9.6]];
     this.lanternPos = { x: 0, y: 0 };
+    this.lampPos = { x: 0, y: 0 };
     this.handPos = { x: 0, y: 0 };
     this.headPos = { x: 0, y: 0 };
     this.lastX = 0;
@@ -158,6 +159,7 @@ export class Rig {
     place('thighB', pts.hB, -THB + R); place('shinB', pts.kB, -SHB + R); place('footB', pts.aB, -FTB + R);
     place('uarmF', pts.sF, -UAF + R); place('farmF', pts.eF, -FAF + R);
     place('uarmB', pts.sB, -UAB + R); place('farmB', pts.eB, -FAB + R);
+    place('tool', pts.eF, -FAF + R);   // something held in the front hand (a crowbar): turns with the forearm
 
     // Secondary motion: hair, bag and lantern swing like damped springs.
     const vx = motion.vx || 0, vy = motion.vy || 0;
@@ -195,6 +197,12 @@ export class Rig {
       this.lanternLocal = limb(hand, this.lanternAng * DEG, b.lanternLen ?? 12);
     }
 
+    // A light worn on the head (headlamp): its point turns with the head.
+    if (b.lamp) {
+      const lp = rot(b.lamp[0], b.lamp[1], H + R - T0);
+      this.lampLocal = [pts.neck[0] + lp[0], pts.neck[1] + lp[1]];
+    }
+
     this.root.x = x;
     this.root.y = y;
     this.root.scaleX = this.facing;
@@ -202,6 +210,7 @@ export class Rig {
     this.handPos.x = x + pts.wF[0] * this.facing; this.handPos.y = y + pts.wF[1];
     this.headPos.x = x + pts.neck[0] * this.facing; this.headPos.y = y + pts.neck[1] - 12;
     if (this.lanternLocal) { this.lanternPos.x = x + this.lanternLocal[0] * this.facing; this.lanternPos.y = y + this.lanternLocal[1]; }
+    if (this.lampLocal) { this.lampPos.x = x + this.lampLocal[0] * this.facing; this.lampPos.y = y + this.lampLocal[1]; }
     this.pts = pts;
   }
 

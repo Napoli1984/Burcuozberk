@@ -1,4 +1,6 @@
 // Small painted illustrations shown on the examine cards.
+import { t, tv } from '../i18n.js';
+
 const TAU = Math.PI * 2;
 
 function bg(ctx, w, h, a, b) {
@@ -140,9 +142,126 @@ function card(ctx, w, h) {
     }
     ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = '600 11px Manrope, sans-serif'; ctx.textAlign = 'left'; ctx.fillText(label, x, y + hh + 16);
   };
-  panel(100, 52, 150, 168, true, '1998 · riflettografia');
-  panel(272, 52, 150, 168, false, 'oggi · riflettografia');
-  ctx.fillStyle = '#ec9fa8'; ctx.font = '700 13px Manrope, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('7 opere · «laboratorio esterno PA»', 260, 262);
+  panel(100, 52, 150, 168, true, t('art.r1998'));
+  panel(272, 52, 150, 168, false, t('art.rToday'));
+  ctx.fillStyle = '#ec9fa8'; ctx.font = '700 13px Manrope, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(t('art.works'), 260, 262);
+}
+
+// Pictures loaded as plain images (they are only used on the cards).
+const IMGS = {};
+export function loadIllustrationImages(map) {
+  for (const [k, src] of Object.entries(map)) {
+    if (IMGS[k]) continue;
+    const im = new Image();
+    im.decoding = 'async';
+    im.src = src;
+    IMGS[k] = im;
+  }
+}
+const ready = (k) => { const im = IMGS[k]; return im && im.complete && im.naturalWidth > 0 ? im : null; };
+const NEEDS = { panel: 'panel', panelUV: 'panelUV', photo: 'pala1998', pala: 'palaOggi' };
+
+function paper(ctx, x, y, w, h, rot) {
+  ctx.save();
+  ctx.translate(x, y); ctx.rotate(rot);
+  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6;
+  const g = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+  g.addColorStop(0, '#f1e7cf'); g.addColorStop(1, '#ddcca8');
+  ctx.fillStyle = g; ctx.fillRect(-w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+
+function fitFont(ctx, lines, maxW, size, face) {
+  let s = size;
+  for (; s > 9; s -= 0.5) {
+    ctx.font = `italic 500 ${s}px ${face}`;
+    if (lines.every((l) => ctx.measureText(l).width <= maxW)) break;
+  }
+  return s;
+}
+
+// Lale's note with the riddle, taped under the drawer.
+function note(ctx, w, h) {
+  bg(ctx, w, h, '#3a2b22', '#120c0b');
+  ctx.save();
+  ctx.translate(w / 2, h / 2 + 4); ctx.rotate(-0.035);
+  paper(ctx, 0, 0, 450, 246, 0);
+  ctx.fillStyle = 'rgba(230,215,160,0.55)';
+  ctx.save(); ctx.translate(-200, -118); ctx.rotate(-0.5); ctx.fillRect(-28, -9, 56, 18); ctx.restore();
+  ctx.save(); ctx.translate(200, -118); ctx.rotate(0.45); ctx.fillRect(-28, -9, 56, 18); ctx.restore();
+  ctx.fillStyle = '#2c241c'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  const face = '"Cormorant Garamond", Georgia, serif';
+  ctx.font = `italic 600 19px ${face}`;
+  ctx.fillText(t('art.forAda'), -196, -84);
+  const lines = tv('riddle.lines');
+  const s = fitFont(ctx, lines, 392, 18, face);
+  lines.forEach((l, i) => ctx.fillText(l, -196, -46 + i * (s * 1.75)));
+  ctx.font = `italic 600 20px ${face}`;
+  ctx.textAlign = 'right'; ctx.fillText('— L.', 196, 104);
+  ctx.restore();
+  const l = ctx.createRadialGradient(420, 40, 5, 420, 40, 300); l.addColorStop(0, 'rgba(255,210,150,0.22)'); l.addColorStop(1, 'rgba(255,210,150,0)');
+  ctx.fillStyle = l; ctx.fillRect(0, 0, w, h);
+}
+
+function panelArt(ctx, w, h, uv) {
+  bg(ctx, w, h, uv ? '#2a1748' : '#33261d', uv ? '#09050f' : '#100b09');
+  const im = ready(uv ? 'panelUV' : 'panel');
+  if (!im) return;
+  const hh = 280, ww = hh * im.width / im.height;
+  ctx.save();
+  ctx.shadowColor = uv ? 'rgba(140,90,255,0.55)' : 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 24;
+  ctx.drawImage(im, w / 2 - ww / 2, h / 2 - hh / 2, ww, hh);
+  ctx.restore();
+  if (uv) {
+    const g = ctx.createRadialGradient(w / 2, 20, 10, w / 2, 40, 320); g.addColorStop(0, 'rgba(170,120,255,0.25)'); g.addColorStop(1, 'rgba(170,120,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  }
+}
+
+// The 1998 photograph of the altarpiece, found in the trunk, with a torn scrap beside it.
+function photo(ctx, w, h) {
+  bg(ctx, w, h, '#2b2420', '#0c0a09');
+  const im = ready('pala1998');
+  ctx.save();
+  ctx.translate(222, 150); ctx.rotate(-0.05);
+  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
+  ctx.fillStyle = '#f3efe6'; ctx.fillRect(-150, -114, 300, 236);
+  ctx.shadowColor = 'transparent';
+  if (im) ctx.drawImage(im, -140, -104, 280, 280 * im.height / im.width);
+  ctx.restore();
+  // the scrap of paper
+  ctx.save();
+  ctx.translate(430, 196); ctx.rotate(0.12);
+  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4;
+  ctx.fillStyle = '#ebdfc4';
+  ctx.beginPath(); ctx.moveTo(-50, -34); ctx.lineTo(44, -40); ctx.lineTo(52, -6); ctx.lineTo(46, 30); ctx.lineTo(8, 36); ctx.lineTo(-44, 32); ctx.lineTo(-52, 2); ctx.closePath(); ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.strokeStyle = 'rgba(44,36,28,0.75)'; ctx.lineWidth = 1.2;
+  for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-38, -20 + i * 14); ctx.bezierCurveTo(-10, -24 + i * 14, 10, -16 + i * 14, 34 - (i % 2) * 14, -20 + i * 14); ctx.stroke(); }
+  ctx.restore();
+  ctx.fillStyle = 'rgba(246,236,228,0.55)'; ctx.font = 'italic 600 15px "Cormorant Garamond", serif'; ctx.textAlign = 'left';
+  ctx.fillText(t('art.photoBack'), 382, 92);
+}
+
+// The restored altarpiece under the lifted sheet.
+function pala(ctx, w, h) {
+  bg(ctx, w, h, '#1d2230', '#07080c');
+  const im = ready('palaOggi');
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 20;
+  ctx.fillStyle = '#4a3418'; ctx.fillRect(84, 34, 352, 262);
+  ctx.restore();
+  if (im) ctx.drawImage(im, 96, 46, 328, 328 * im.height / im.width);
+  // the sheet, pulled up to one side
+  const g = ctx.createLinearGradient(240, 0, 520, 160);
+  g.addColorStop(0, 'rgba(214,220,232,0.97)'); g.addColorStop(0.6, 'rgba(176,184,204,0.97)'); g.addColorStop(1, 'rgba(120,128,150,0.97)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(70, 0); ctx.lineTo(520, 0); ctx.lineTo(520, 300); ctx.lineTo(470, 300);
+  ctx.bezierCurveTo(440, 220, 470, 150, 380, 110); ctx.bezierCurveTo(300, 76, 260, 40, 150, 30); ctx.bezierCurveTo(110, 26, 90, 14, 70, 0); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(90,96,120,0.35)'; ctx.lineWidth = 2;
+  for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(200 + i * 60, 8); ctx.bezierCurveTo(260 + i * 50, 60, 300 + i * 40, 120, 440 + i * 14, 200 + i * 18); ctx.stroke(); }
+  const l = ctx.createRadialGradient(w * 0.3, 10, 5, w * 0.3, 10, 340); l.addColorStop(0, 'rgba(160,180,255,0.16)'); l.addColorStop(1, 'rgba(160,180,255,0)');
+  ctx.fillStyle = l; ctx.fillRect(0, 0, w, h);
 }
 
 function sketch(ctx, w, h) {
@@ -177,9 +296,14 @@ function sketch(ctx, w, h) {
   ctx.restore();
 }
 
-const PAINTERS = { desk, jar, card, sketch };
+const PAINTERS = {
+  desk, jar, card, sketch, note, photo, pala,
+  panel: (ctx, w, h) => panelArt(ctx, w, h, false),
+  panelUV: (ctx, w, h) => panelArt(ctx, w, h, true),
+};
 
 export function paintIllustration(canvas, kind) {
+  canvas.dataset.art = kind;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
@@ -189,4 +313,7 @@ export function paintIllustration(canvas, kind) {
   (PAINTERS[kind] || desk)(ctx, 520, 300);
   ctx.restore();
   grain(ctx, w, h, 0.05);
+  // a picture still on its way: paint again when it arrives
+  const need = NEEDS[kind] && IMGS[NEEDS[kind]];
+  if (need && !ready(NEEDS[kind])) need.addEventListener('load', () => { if (canvas.dataset.art === kind) paintIllustration(canvas, kind); }, { once: true });
 }

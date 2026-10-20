@@ -1,5 +1,8 @@
-// Everything drawn over the game with HTML: screens, HUD, dialogue, examine cards, dossier, menus.
+// Everything drawn over the game with HTML: screens, HUD, dialogue, examine cards, dossier, menus,
+// and (in puzzles.js) the puzzle panels. Texts come from the language tables (i18n.js).
 import { paintIllustration } from './art/illus.js';
+import { t, tv, getLang, setLang, onLang, LANGS } from './i18n.js';
+import { Puzzles } from './puzzles.js';
 
 const ICON = {
   eye: '<svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg>',
@@ -7,6 +10,9 @@ const ICON = {
   pause: '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
   jump: '<svg viewBox="0 0 24 24"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
+
+const LANG_NAMES = { it: 'Italiano', tr: 'Türkçe' };
+const LANG_BTNS = LANGS.map((l) => `<button class="lang" data-lang="${l}" lang="${l}">${LANG_NAMES[l]}</button>`).join('');
 
 const TEMPLATE = `
 <div class="vignette" id="vignette"></div>
@@ -16,34 +22,34 @@ const TEMPLATE = `
   <div class="who">
     <div class="face"><img src="img/ada-ritratto.webp" alt=""></div>
     <div class="who-txt">
-      <div class="name">Ada Demir</div>
+      <div class="name">Burcu Özberk</div>
       <div class="pips" id="pips"><i></i><i></i><i></i><i></i><i></i></div>
     </div>
   </div>
-  <div class="obj" id="obj"><span class="obj-k">Obiettivo</span><span id="obj-t"></span></div>
+  <div class="obj" id="obj"><span class="obj-k" data-t="ui.objective"></span><span id="obj-t"></span></div>
 </div>
 <div class="topbtns" id="topbtns">
-  <button class="ib touch-only" id="b-observe" aria-label="Osserva">${ICON.eye}</button>
-  <button class="ib" id="b-dossier" aria-label="Dossier">${ICON.folder}<span class="dot" id="dossier-dot"></span></button>
-  <button class="ib" id="b-pause" aria-label="Pausa">${ICON.pause}</button>
+  <button class="ib touch-only" id="b-observe" data-ta="aria-label:ui.observe">${ICON.eye}</button>
+  <button class="ib" id="b-dossier" data-ta="aria-label:ui.dossier">${ICON.folder}<span class="dot" id="dossier-dot"></span></button>
+  <button class="ib" id="b-pause" data-ta="aria-label:ui.pause">${ICON.pause}</button>
 </div>
 <div class="barks" id="barks"></div>
 <div class="prompt" id="prompt"><span class="key" id="prompt-k">E</span><span id="prompt-t"></span></div>
 <div class="toast" id="toast"></div>
-<div class="area" id="area"><small id="area-k">San Domenico</small><span id="area-t"></span></div>
+<div class="area" id="area"><small id="area-k" data-t="area.small"></small><span id="area-t"></span></div>
 <div class="touch" id="touch">
   <div class="stick-zone" id="stick-zone"><div class="stick" id="stick"><div class="knob" id="knob"></div></div></div>
-  <button class="tb tb-action" data-btn="action" id="tb-action"><span id="tb-action-t">Azione</span></button>
-  <button class="tb tb-dodge" data-btn="dodge"><span>Schiva</span></button>
-  <button class="tb tb-kick" data-btn="kick"><span>Calcio</span></button>
-  <button class="tb tb-punch" data-btn="punch"><span>Pugno</span></button>
-  <button class="tb tb-jump" data-btn="jump">${ICON.jump}<span>Salta</span></button>
+  <button class="tb tb-action" data-btn="action" id="tb-action"><span id="tb-action-t" data-t="ui.action"></span></button>
+  <button class="tb tb-dodge" data-btn="dodge"><span data-t="ui.dodge"></span></button>
+  <button class="tb tb-kick" data-btn="kick"><span data-t="ui.kick"></span></button>
+  <button class="tb tb-punch" data-btn="punch"><span data-t="ui.punch"></span></button>
+  <button class="tb tb-jump" data-btn="jump">${ICON.jump}<span data-t="ui.jump"></span></button>
 </div>
 <div class="dialog" id="dialog" hidden>
   <div class="dlg-box" id="dlg-box">
     <div class="dlg-who" id="dlg-who"></div>
     <div class="dlg-text" id="dlg-text"></div>
-    <div class="dlg-next" id="dlg-next">Continua ▸</div>
+    <div class="dlg-next" data-t="ui.next"></div>
   </div>
 </div>
 <div class="sheet" id="examine" hidden>
@@ -53,98 +59,91 @@ const TEMPLATE = `
       <h2 id="ex-title"></h2>
       <p id="ex-text"></p>
       <p class="ex-note" id="ex-note"></p>
-      <button class="btn" id="ex-ok">Continua</button>
+      <button class="btn" id="ex-ok"></button>
     </div>
   </div>
 </div>
 <div class="sheet" id="dossier" hidden>
   <div class="card dos-card">
-    <header><h2>Dossier</h2><button class="x" id="dos-x" aria-label="Chiudi">×</button></header>
+    <header><h2 data-t="ui.dossier"></h2><button class="x" id="dos-x" data-ta="aria-label:ui.close">×</button></header>
     <ol id="dos-list"></ol>
   </div>
 </div>
 <div class="sheet" id="pause" hidden>
   <div class="card menu">
-    <h2>Pausa</h2>
-    <button class="btn" id="p-resume">Riprendi</button>
-    <button class="btn ghost" id="p-controls">Comandi</button>
-    <button class="btn ghost" id="p-checkpoint">Ricomincia dal checkpoint</button>
-    <div class="vol"><span>Volume</span><input type="range" id="p-vol" min="0" max="100" step="5"><button class="mini" id="p-mute">Audio sì</button></div>
-    <button class="btn ghost" id="p-title">Torna al titolo</button>
-    <a class="btn ghost" href="../">Torna al sito</a>
+    <h2 data-t="ui.paused"></h2>
+    <button class="btn" id="p-resume" data-t="ui.resume"></button>
+    <button class="btn ghost" id="p-controls" data-t="ui.controls"></button>
+    <button class="btn ghost" id="p-checkpoint" data-t="ui.checkpoint"></button>
+    <div class="vol"><span data-t="ui.volume"></span><input type="range" id="p-vol" min="0" max="100" step="5"><button class="mini" id="p-mute"></button></div>
+    <div class="vol lang-row"><span data-t="ui.language"></span><div class="langs">${LANG_BTNS}</div></div>
+    <button class="btn ghost" id="p-title" data-t="ui.toTitle"></button>
+    <a class="btn ghost" href="../" data-t="ui.toSite"></a>
   </div>
 </div>
 <div class="sheet" id="controls" hidden>
   <div class="card ctl-card">
-    <header><h2>Comandi</h2><button class="x" id="ctl-x" aria-label="Chiudi">×</button></header>
+    <header><h2 data-t="ui.controls"></h2><button class="x" id="ctl-x" data-ta="aria-label:ui.close">×</button></header>
     <table class="ctl">
-      <thead><tr><th></th><th>Tastiera</th><th>Controller</th><th>Telefono</th></tr></thead>
-      <tbody>
-        <tr><td>Muoviti</td><td>A D · ← →</td><td>levetta</td><td>levetta a sinistra</td></tr>
-        <tr><td>Cammina piano</td><td>Maiusc</td><td>levetta poco inclinata</td><td>levetta poco inclinata</td></tr>
-        <tr><td>Salta · aggrappati</td><td>Spazio</td><td>A</td><td>Salta</td></tr>
-        <tr><td>Sali · scendi</td><td>W S · ↑ ↓</td><td>levetta su/giù</td><td>levetta su/giù</td></tr>
-        <tr><td>Accovacciati</td><td>S · ↓</td><td>levetta giù</td><td>levetta giù</td></tr>
-        <tr><td>Azione</td><td>E · Invio</td><td>RB</td><td>tasto Azione</td></tr>
-        <tr><td>Pugno · Calcio</td><td>J · K</td><td>X · Y</td><td>Pugno · Calcio</td></tr>
-        <tr><td>Schivata</td><td>L</td><td>B</td><td>Schiva</td></tr>
-        <tr><td>Osserva (tieni premuto)</td><td>Q</td><td>LB</td><td>occhio in alto</td></tr>
-        <tr><td>Dossier · Pausa</td><td>F · Esc</td><td>Select · Start</td><td>in alto a destra</td></tr>
-      </tbody>
+      <thead><tr><th></th><th data-t="ctl.keyboard"></th><th data-t="ctl.pad"></th><th data-t="ctl.phone"></th></tr></thead>
+      <tbody id="ctl-rows"></tbody>
     </table>
-    <p class="ctl-note">Scendere da una piattaforma sottile: giù + salta. Lasciare un bordo: giù.</p>
+    <p class="ctl-note" data-t="ctl.note"></p>
   </div>
 </div>
 <div class="screen title" id="title" hidden>
-  <div class="t-photo"><img src="img/ada-titolo.webp" alt="Burcu Özberk nel ruolo di Ada Demir"></div>
+  <div class="t-photo"><img src="img/ada-titolo.webp" data-ta="alt:title.alt"></div>
+  <div class="langs t-langs">${LANG_BTNS}</div>
   <div class="t-col">
     <div class="t-kicker">Burcu Özberk</div>
-    <h1>Sotto la<br>vernice</h1>
-    <p class="t-sub">Un’avventura investigativa a Velaria</p>
-    <p class="t-proto">Prototipo · Capitolo 5 · Il laboratorio di San Domenico</p>
+    <h1 data-th="title.h1"></h1>
+    <p class="t-sub" data-t="title.sub"></p>
+    <p class="t-proto" data-t="title.proto"></p>
     <div class="t-btns">
-      <button class="btn" id="t-play">Gioca</button>
-      <button class="btn ghost" id="t-continue" hidden>Continua dal checkpoint</button>
-      <button class="btn ghost" id="t-controls">Comandi</button>
-      <button class="btn ghost touch-only" id="t-full">Schermo intero</button>
-      <a class="btn ghost" href="../">Torna al sito</a>
+      <button class="btn" id="t-play" data-t="title.play"></button>
+      <button class="btn ghost" id="t-continue" hidden data-t="title.cont"></button>
+      <button class="btn ghost" id="t-controls" data-t="title.controls"></button>
+      <button class="btn ghost touch-only" id="t-full" data-t="title.full"></button>
+      <a class="btn ghost" href="../" data-t="title.site"></a>
     </div>
-    <p class="t-cast">Burcu Özberk interpreta Ada Demir, un personaggio di finzione.</p>
+    <p class="t-cast" data-t="title.cast"></p>
   </div>
 </div>
 <div class="screen intro" id="intro" hidden>
   <div class="in-card">
-    <div class="in-k">Atto I · Capitolo 5</div>
-    <h2>Il laboratorio di San Domenico</h2>
-    <p>Velaria, notte. Lale Aydın, restauratrice e amica di Ada, non risponde da tre giorni.</p>
-    <p>Il suo ultimo posto di lavoro è il laboratorio di restauro del vecchio convento di San Domenico. Di notte l’ala restauri è chiusa, e c’è una guardia.</p>
-    <button class="btn" id="in-go">Entra</button>
+    <div class="in-k" data-t="intro.k"></div>
+    <h2 data-t="intro.h"></h2>
+    <p data-t="intro.p1"></p>
+    <p data-t="intro.p2"></p>
+    <button class="btn" id="in-go" data-t="intro.go"></button>
   </div>
 </div>
 <div class="screen end" id="end" hidden>
   <div class="in-card end-card">
-    <div class="in-k">Fine del prototipo</div>
+    <div class="in-k" data-t="end.k"></div>
     <h2 id="end-title"></h2>
     <p id="end-text"></p>
     <dl class="stats" id="end-stats"></dl>
-    <p class="end-next">Nel gioco completo la pista continua allo <em>Studio della copista</em>.</p>
+    <p class="end-next" data-th="end.next"></p>
     <div class="t-btns">
-      <button class="btn" id="end-again">Rigioca</button>
-      <a class="btn ghost" href="../">Torna al sito</a>
+      <button class="btn" id="end-again" data-t="end.again"></button>
+      <a class="btn ghost" href="../" data-t="end.site"></a>
     </div>
   </div>
 </div>
 <div class="screen loading" id="loading">
   <div class="ld-k">Burcu Özberk</div>
-  <div class="ld-t">Sotto la vernice</div>
+  <div class="ld-t" data-t="load.title"></div>
   <div class="ld-bar"><i></i></div>
-  <div class="ld-s" id="ld-s">Preparo il convento…</div>
+  <div class="ld-s" id="ld-s" data-t="load.prep"></div>
 </div>
 <div class="rotate" id="rotate">
   <svg viewBox="0 0 64 64"><rect x="20" y="8" width="24" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M50 40a18 18 0 0 1-18 18" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M28 54l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>
-  <p>Gira il telefono in orizzontale</p>
+  <p data-t="ui.rotate"></p>
 </div>
 `;
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 export class UI {
   constructor(root, inp, snd) {
@@ -165,6 +164,7 @@ export class UI {
     this.isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
     root.classList.toggle('is-touch', this.isTouch);
     this.portrait = false;
+    this.pz = new Puzzles(this);
 
     // Buttons
     const click = (id, fn) => $(id).addEventListener('click', (e) => { e.preventDefault(); this.snd.play('ui'); fn(); });
@@ -186,6 +186,18 @@ export class UI {
     click('t-full', () => this.fullscreen());
     click('in-go', () => this.advance());
     click('end-again', () => this.emit('again'));
+    for (const b of root.querySelectorAll('[data-lang]')) {
+      b.addEventListener('click', (e) => { e.preventDefault(); this.snd.play('ui'); setLang(b.dataset.lang); });
+    }
+    $('dos-list').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-act]');
+      if (!b) return;
+      e.preventDefault();
+      this.snd.play('ui');
+      this.$('dossier').hidden = true;
+      this.modal = null;
+      this.emit('dossierAct', b.dataset.act);
+    });
     // the observe button on phones is held down
     const ob = $('b-observe');
     const obOn = (e) => { e.preventDefault(); this.inp.virtual.buttons.observe = true; ob.classList.add('on'); };
@@ -200,7 +212,8 @@ export class UI {
     addEventListener('resize', checkRotate);
     addEventListener('orientationchange', checkRotate);
     checkRotate();
-    this.syncAudio();
+    onLang(() => this.applyLang());
+    this.applyLang();
   }
 
   on(name, fn) { this.handlers[name] = fn; }
@@ -212,6 +225,29 @@ export class UI {
     if (on === this.isTouch) return;
     this.isTouch = on;
     this.root.classList.toggle('is-touch', on);
+  }
+
+  // Which kind of controls the player is using: 'touch', 'pad' or 'kb'.
+  device() {
+    const d = this.inp.lastDevice;
+    return d === 'touch' || (this.isTouch && d !== 'pad' && d !== 'keyboard') ? 'touch' : d === 'pad' ? 'pad' : 'kb';
+  }
+
+  // Puts the texts of the current language everywhere in the static interface.
+  applyLang() {
+    const root = this.root;
+    for (const el of root.querySelectorAll('[data-t]')) el.textContent = t(el.dataset.t);
+    for (const el of root.querySelectorAll('[data-th]')) el.innerHTML = t(el.dataset.th);
+    for (const el of root.querySelectorAll('[data-ta]')) {
+      for (const pair of el.dataset.ta.split(';')) { const [a, k] = pair.split(':'); el.setAttribute(a, t(k)); }
+    }
+    this.$('ctl-rows').innerHTML = tv('ctl.rows').map((r) => '<tr>' + r.map((c) => `<td>${esc(c)}</td>`).join('') + '</tr>').join('');
+    for (const b of root.querySelectorAll('[data-lang]')) b.classList.toggle('on', b.dataset.lang === getLang());
+    document.documentElement.lang = getLang();
+    document.title = t('meta.title');
+    this.promptLabel = null;
+    this.syncAudio();
+    this.renderDossier();
   }
 
   // ------------------------------------------------------------ screens
@@ -262,7 +298,7 @@ export class UI {
     clearTimeout(this.areaT); this.$('area').classList.remove('on');
     this.$('end-title').textContent = title;
     this.$('end-text').textContent = text;
-    this.$('end-stats').innerHTML = stats.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+    this.$('end-stats').innerHTML = stats.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
     this.$('end').hidden = false;
   }
 
@@ -295,7 +331,8 @@ export class UI {
     h.classList.remove('go'); void h.offsetWidth; h.classList.add('go');
   }
 
-  prompt(label, kind = 'action') {
+  // What Ada can do here: the full label next to the key, and a short verb on the phone's button.
+  prompt(label, verb = null) {
     if (label === this.promptLabel) return;
     this.promptLabel = label;
     const p = this.$('prompt');
@@ -303,16 +340,16 @@ export class UI {
     this.$('prompt-t').textContent = label;
     this.$('prompt-k').textContent = this.inp.lastDevice === 'pad' ? 'RB' : 'E';
     p.classList.add('on');
-    this.$('tb-action-t').textContent = label.split(' ')[0];
+    this.$('tb-action-t').textContent = verb || label.split(' ')[0];
     this.$('tb-action').classList.add('on');
   }
 
   toast(text, ms = 4200) {
-    const t = this.$('toast');
-    t.textContent = text;
-    t.classList.add('on');
+    const tt = this.$('toast');
+    tt.textContent = text;
+    tt.classList.add('on');
     clearTimeout(this.toastT);
-    this.toastT = setTimeout(() => t.classList.remove('on'), ms);
+    this.toastT = setTimeout(() => tt.classList.remove('on'), ms);
   }
 
   area(name) {
@@ -352,6 +389,7 @@ export class UI {
   clearBarks() { for (const b of this.barks.values()) { b.el.classList.remove('on'); b.until = 0; } }
 
   // ------------------------------------------------------------ dialogue
+  // lines: [who, text] pairs; who is a key of dlg.name (ada, fausto, marta).
   dialog(lines, onDone) {
     this.modal = 'dialog';
     this.prompt(null);
@@ -370,11 +408,11 @@ export class UI {
       if (f) f();
       return;
     }
-    this.$('dlg-who').textContent = l.who;
-    this.$('dlg-box').classList.toggle('ada', l.who === 'Ada');
+    const [who, full] = l;
+    this.$('dlg-who').textContent = t('dlg.name.' + who);
+    this.$('dlg-box').classList.toggle('ada', who === 'ada');
     const el = this.$('dlg-text');
     el.textContent = '';
-    const full = l.text;
     let i = 0;
     clearInterval(this.typing);
     this.typingText = full;
@@ -410,28 +448,41 @@ export class UI {
     this.$('ex-text').textContent = c.text;
     this.$('ex-note').textContent = c.note || '';
     this.$('ex-note').hidden = !c.note;
-    this.$('ex-ok').textContent = this.cards.length ? 'Avanti' : 'Continua';
+    this.$('ex-note').classList.toggle('verse', !!c.verse);
+    this.$('ex-ok').textContent = this.cards.length ? t('ui.forward') : t('ui.cont');
     if (c.sound) this.snd.play(c.sound);
     const card = this.$('examine').firstElementChild;
     card.classList.remove('in'); void card.offsetWidth; card.classList.add('in');
   }
 
   // ------------------------------------------------------------ dossier
+  // Entries: { id, vars, act }; title and text come from dos.<id> in the current language.
   addDossier(entry) {
     if (this.dossierItems.some((e) => e.id === entry.id)) return false;
-    this.dossierItems.push(entry);
+    this.dossierItems.push({ ...entry });
     this.renderDossier();
     this.$('dossier-dot').classList.add('on');
     return true;
   }
 
+  updateDossier(id, vars, act) {
+    const e = this.dossierItems.find((x) => x.id === id);
+    if (!e) return;
+    e.vars = vars; e.act = act;
+    this.renderDossier();
+  }
+
   setDossier(items) {
-    this.dossierItems = items.slice();
+    this.dossierItems = items.map((e) => ({ ...e }));
     this.renderDossier();
   }
 
   renderDossier() {
-    this.$('dos-list').innerHTML = this.dossierItems.map((e) => `<li><h3>${e.title}</h3><p>${e.text}</p></li>`).join('') || '<li><p>Ancora niente.</p></li>';
+    if (!this.$('dos-list')) return;
+    this.$('dos-list').innerHTML = this.dossierItems.map((e) => {
+      const btn = e.act ? `<button class="mini dos-act" data-act="${esc(e.act)}">${esc(t('ui.reassemble'))}</button>` : '';
+      return `<li><h3>${esc(t('dos.' + e.id + '.t', e.vars))}</h3><p>${esc(t('dos.' + e.id + '.x', e.vars))}</p>${btn}</li>`;
+    }).join('') || `<li><p>${esc(t('ui.dossierEmpty'))}</p></li>`;
   }
 
   openDossier() {
@@ -478,7 +529,18 @@ export class UI {
 
   syncAudio() {
     this.$('p-vol').value = Math.round(this.snd.volume * 100);
-    this.$('p-mute').textContent = this.snd.muted ? 'Audio no' : 'Audio sì';
+    this.$('p-mute').textContent = this.snd.muted ? t('ui.audioOff') : t('ui.audioOn');
+  }
+
+  // Keyboard and gamepad while a panel is open (the game itself is paused).
+  handleInput(inp, dt) {
+    const m = this.modal;
+    if (this.pz.owns(m)) { this.pz.input(inp, dt); return; }
+    if (m === 'dialog' || m === 'examine' || m === 'intro' || m === 'dossier' || m === 'pause' || m === 'controls') {
+      if (inp.pressed('action') || inp.pressed('jump') || inp.pressed('punch')) this.advance();
+      else if (inp.pressed('pause') || inp.pressed('dodge')) this.back();
+      else if (inp.pressed('dossier') && m === 'dossier') this.back();
+    }
   }
 
   // Confirm / continue from keyboard or gamepad while a panel is open.

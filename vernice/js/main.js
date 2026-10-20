@@ -4,6 +4,7 @@ import { Sound } from './audio.js';
 import { UI } from './ui.js';
 import { bindTouch } from './touch.js';
 import { WorldScene } from './scene.js';
+import { t } from './i18n.js';
 
 // Older Safari versions miss roundRect, used by the painted art.
 if (!CanvasRenderingContext2D.prototype.roundRect) {
@@ -38,7 +39,7 @@ function renderConfig() {
 }
 
 async function boot() {
-  ui.loading('Carico i caratteri…');
+  ui.loading(t('boot.fonts'));
   try {
     await Promise.race([
       Promise.all([
@@ -49,7 +50,7 @@ async function boot() {
       wait(2500),
     ]);
   } catch (e) { /* the game still works with fallback fonts */ }
-  ui.loading('Apro le porte del convento…');
+  ui.loading(t('boot.doors'));
   await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 40)));
 
   // The canvas draws at the screen's real resolution (up to 2x, and never more than ~2.6 million
