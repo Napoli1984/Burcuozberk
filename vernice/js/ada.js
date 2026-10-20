@@ -48,6 +48,7 @@ export class Ada {
     this.frozen = false;
     this.light = 0.4;
     this.tint = 0xffffff;
+    this.drawY = y;
   }
 
   get x() { return this.body.x; }
@@ -76,6 +77,7 @@ export class Ada {
   teleport(x, y) {
     const b = this.body;
     b.x = x; b.y = y; b.vx = 0; b.vy = 0; b.onGround = true; b.h = ADA.height;
+    this.drawY = y;
     this.crouch = false; this.hide = null; this.busy = null; this.ledge = null;
     this.setState('ground');
     this.rig.setAlpha(1);
@@ -126,18 +128,17 @@ export class Ada {
     return inp.down('walk') || (inp.analogX && Math.abs(inp.axisX) < 0.68);
   }
 
+  // A ladder (or a flight of stairs) Ada can start climbing from where she is.
   ladderHere() {
-    const b = this.body;
-    const tx = Math.floor(b.x / TILE);
-    const ty = Math.floor((b.y - 50) / TILE);
-    if (this.map.get(tx, ty) === T.LADDER || this.map.get(tx, Math.floor((b.y - 8) / TILE)) === T.LADDER) return tx;
-    return -1;
+    const b = this.body, m = this.map;
+    return m.ladderAt(b.x, b.y - 30, 0, 18) || m.ladderAt(b.x, b.y - 8, 0, 18);
   }
 
+  // A ladder going down from the floor she is standing on.
   ladderBelow() {
     const b = this.body;
-    const tx = Math.floor(b.x / TILE), ty = Math.floor((b.y + 4) / TILE);
-    return this.map.get(tx, ty) === T.LADDER ? tx : -1;
+    const L = this.map.ladderAt(b.x, b.y + 6, 0, 14);
+    return L && Math.abs(L.top - b.y) < 8 ? L : null;
   }
 
   setCrouch(on) {
@@ -157,8 +158,8 @@ export class Ada {
     this.landT += dt;
 
     // Ladders: up to climb, down from a ladder top.
-    if (inp.down('up') && this.ladderHere() >= 0) { this.startLadder(this.ladderHere()); return; }
-    if (inp.down('down') && !inp.down('jump') && this.ladderBelow() >= 0 && Math.abs(ax) < 0.4) { b.y += 3; this.startLadder(this.ladderBelow()); return; }
+    if (inp.down('up') && Math.abs(ax) < 0.6) { const L = this.ladderHere(); if (L && b.y > L.top + 4) { this.startLadder(L); return; } }
+    if (inp.down('down') && !inp.down('jump') && Math.abs(ax) < 0.4) { const L = this.ladderBelow(); if (L) { b.y += 3; this.startLadder(L); return; } }
 
     const wantCrouch = inp.down('down') && !(inp.down('jump'));
     this.setCrouch(wantCrouch);
@@ -218,7 +219,7 @@ export class Ada {
     this.coyote = Math.max(0, this.coyote - dt);
     if (this.coyote > 0 && this.jumpBuf > 0 && b.vy >= 0) { this.jump(); return; }
     if (!inp.down('jump') && b.vy < 0 && !this.jumpCut) { b.vy *= ADA.jumpCut; this.jumpCut = true; }
-    if (inp.down('up') && this.ladderHere() >= 0 && b.vy > -300) { this.startLadder(this.ladderHere()); return; }
+    if (inp.down('up') && b.vy > -300) { const L = this.ladderHere(); if (L && !L.stairs && b.y > L.top + 4) { this.startLadder(L); return; } }
     if (b.vy > -260 && this.grabCooldown <= 0 && !inp.down('down')) {
       const L = this.findLedge(this.facing);
       if (L) { this.startHang(L); return; }
@@ -255,12 +256,13 @@ export class Ada {
     for (let ty = Math.floor(reachTop / TILE); ty <= Math.floor(reachLow / TILE); ty++) {
       const top = ty * TILE;
       if (top < reachTop || top > reachLow) continue;
-      if (!map.isBlock(map.get(tx, ty))) continue;
-      if (map.isBlock(map.get(tx, ty - 1)) || map.isSlope(map.get(tx, ty - 1))) continue;
-      // room to stand on top
-      if (map.isBlock(map.get(tx, ty - 2)) || map.isBlock(map.get(tx, ty - 3))) continue;
-      // nothing solid between the body and the wall face above the ledge
+      if (!map.isBlock(map.get(tx, ty)) || map.isBlock(map.get(tx, ty - 1))) continue;
+      // a face to hang from: the tile under the edge, on Ada's side, must be open
       const faceX = dir > 0 ? tx * TILE : (tx + 1) * TILE;
+      // room to stand on top of the ledge
+      const sx = dir > 0 ? faceX + 2 : faceX - b.w - 2;
+      if (map.rectBlocked(sx, top - ADA.height, b.w, ADA.height - 1)) continue;
+      // nothing solid between the body and the wall face above the ledge
       if (map.rectBlocked(Math.min(b.x, faceX) + 1, top - 30, Math.abs(faceX - b.x) - 2, 28)) continue;
       return { tx, ty, x: faceX, y: top, dir };
     }
@@ -310,21 +312,22 @@ export class Ada {
     }
   }
 
-  startLadder(tx) {
+  startLadder(L) {
     const b = this.body;
-    b.x = tx * TILE + TILE / 2;
+    b.x = L.x;
     b.vx = 0; b.vy = 0;
     b.onGround = false;
-    this.ladderTx = tx;
+    this.ladder = L;
     this.setCrouch(false);
     this.setState('ladder');
   }
 
   updateLadder(dt, inp) {
-    const b = this.body, map = this.map, tx = this.ladderTx;
+    const b = this.body, L = this.ladder;
     const ay = inp.axisY;
-    const dy = (Math.abs(ay) > 0.3 ? sign(ay) : 0) * ADA.climbSpeed * dt;
-    if (inp.pressed('jump')) {
+    const speed = L.stairs ? ADA.stairSpeed : ADA.climbSpeed;
+    const dy = (Math.abs(ay) > 0.3 ? sign(ay) : 0) * speed * dt;
+    if (inp.pressed('jump') && !L.stairs) {
       const d = Math.abs(inp.axisX) > 0.3 ? sign(inp.axisX) : 0;
       if (d) this.facing = d;
       b.vy = d ? -420 : 0; b.vx = d * 180;
@@ -333,40 +336,34 @@ export class Ada {
       return;
     }
     if (dy !== 0) {
-      this.ladderPhase += Math.abs(dy) / 22 * Math.PI;
+      this.ladderPhase += Math.abs(dy) / (L.stairs ? 40 : 22) * Math.PI;
       this.rungDist = (this.rungDist || 0) + Math.abs(dy);
-      if (this.rungDist > 38) { this.rungDist = 0; this.scene.sfx('rung'); }
+      if (this.rungDist > (L.stairs ? 26 : 38)) {
+        this.rungDist = 0;
+        if (L.stairs) this.scene.footstep(this, false); else this.scene.sfx('rung');
+      }
     }
     if (dy < 0) {
-      // top of the ladder: step off onto it
-      let top = Math.floor((b.y - 1) / TILE);
-      while (map.get(tx, top - 1) === T.LADDER) top--;
-      const topY = top * TILE;
-      const ny = b.y + dy;
-      if (map.get(tx, Math.floor((ny - b.h) / TILE)) !== T.LADDER && map.isBlock(map.get(tx, Math.floor((ny - b.h) / TILE)))) {
-        // ceiling: stop
-      } else if (ny <= topY && map.get(tx, top - 1) !== T.LADDER) {
-        b.y = topY; b.onGround = true; b.groundType = T.LADDER;
+      // ceiling above the head stops the climb
+      if (this.map.rectBlocked(b.x - 8, b.y + dy - b.h, 16, 4) && b.y + dy > L.top) { /* stay */ }
+      else if (b.y + dy <= L.top) {
+        b.y = L.top; b.onGround = true; b.groundType = T.LADDER;
         this.setState('ground');
         return;
-      } else {
-        b.y = ny;
-      }
+      } else b.y += dy;
     } else if (dy > 0) {
       const ny = b.y + dy;
-      const g = map.probeGround(b.x, b.y, ny, false, true);
-      if (g !== null && map.get(tx, Math.floor((g + 1) / TILE)) !== T.LADDER) {
-        b.y = g; b.onGround = true; this.setState('ground'); return;
-      }
-      b.y = ny;
-      const on = (yy) => map.get(tx, Math.floor(yy / TILE)) === T.LADDER;
-      if (!on(b.y + 2) && !on(b.y - 10) && !on(b.y - 60)) {
-        this.enterAir();
+      if (ny >= L.bottom) {
+        b.y = L.bottom;
+        const g = this.map.probeGround(b.x, L.bottom - 4, L.bottom + 6, true);
+        if (g !== null) { b.y = g; b.onGround = true; this.setState('ground'); }
+        else this.enterAir();
         return;
       }
+      b.y = ny;
     }
     if (Math.abs(inp.axisX) > 0.7 && Math.abs(ay) < 0.3 && this.t > 0.2) {
-      // step sideways off the ladder
+      // step sideways off the ladder (or off the stairs onto the floor next to them)
       this.facing = sign(inp.axisX);
       b.vx = this.facing * 120;
       this.enterAir();
@@ -458,6 +455,7 @@ export class Ada {
 
   enterHide(spot) {
     this.hide = spot;
+    this.rig.setDepth(36);   // drawn over the hedge, canvas or curtain as a pale silhouette
     this.body.vx = 0;
     this.setCrouch(false);
     this.setState('hidden');
@@ -466,6 +464,7 @@ export class Ada {
 
   leaveHide() {
     this.hide = null;
+    this.rig.setDepth(30);
     if (this.state === 'hidden') this.setState('ground');
   }
 
@@ -521,7 +520,10 @@ export class Ada {
       case 'air': pose = b.vy < 0 ? A.jump(b.vy) : A.fall(b.vy); rate = damp(12, dt); break;
       case 'hang': pose = A.hang(this.t); rate = damp(24, dt); break;
       case 'climb': pose = A.climbUp(Math.min(1, this.t / ADA.climbUpTime)); rate = damp(30, dt); break;
-      case 'ladder': pose = A.ladder(this.ladderPhase); rate = damp(20, dt); break;
+      case 'ladder':
+        if (this.ladder && this.ladder.stairs) { pose = A.walk(this.ladderPhase, 'ada', 0.8); rate = damp(16, dt); }
+        else { pose = A.ladder(this.ladderPhase); rate = damp(20, dt); }
+        break;
       case 'punch': pose = A.punch(this.combo, Math.min(1, this.t / COMBAT.punch.dur)); rate = damp(40, dt); break;
       case 'kick': pose = A.kick(Math.min(1, this.t / COMBAT.kick.dur)); rate = damp(40, dt); break;
       case 'dodge': pose = A.roll(this.t / ADA.dodgeTime); rate = 1; break;
@@ -535,7 +537,10 @@ export class Ada {
     let dx = 0;
     if (this.state === 'hang') dx = this.facing * 9;
     if (this.state === 'climb') dx = this.facing * 9 * (1 - Math.min(1, this.t / ADA.climbUpTime));
-    this.rig.update(pose, b.x + dx, b.y, dt, rate, { vx: b.vx, vy: b.vy, t: this.clock });
-    this.rig.setAlpha(this.state === 'hidden' ? 0.5 : (this.invuln > 0 && this.state === 'hurt' && Math.floor(this.clock * 20) % 2 ? 0.6 : 1));
+    // Steps on stairs are 10 px tall: the drawing glides over them instead of jumping.
+    if (this.drawY === undefined || !b.onGround || Math.abs(b.y - this.drawY) > 30 || this.state !== 'ground') this.drawY = b.y;
+    else this.drawY += (b.y - this.drawY) * damp(28, dt);
+    this.rig.update(pose, b.x + dx, this.drawY, dt, rate, { vx: b.vx, vy: b.vy, t: this.clock });
+    this.rig.setAlpha(this.state === 'hidden' ? 0.34 : (this.invuln > 0 && this.state === 'hurt' && Math.floor(this.clock * 20) % 2 ? 0.6 : 1));
   }
 }

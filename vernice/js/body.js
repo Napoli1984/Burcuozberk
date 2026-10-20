@@ -1,20 +1,19 @@
-// A box that moves through the tile map. Its x,y is the middle of the feet.
+// A box that moves through the collision map. Its x,y is the middle of the feet.
 import { TILE } from './config.js';
 import { T } from './level5.js';
 
-const STEP_UP = 24;    // how much a walking body may rise in one frame (slopes)
-const SNAP_DOWN = 26;  // how far a walking body sticks to the ground going down slopes
+const STEP_UP = 24;    // how much a walking body may rise in one frame (steps, planks)
+const SNAP_DOWN = 26;  // how far a walking body sticks to the ground going down
 
 export class Body {
   constructor(x, y, w, h) {
     this.x = x; this.y = y; this.w = w; this.h = h;
     this.vx = 0; this.vy = 0;
     this.onGround = false;
-    this.onSlope = false;
     this.groundType = T.EMPTY;
     this.hitWall = 0;
     this.hitHead = false;
-    this.dropTimer = 0;      // > 0 while falling through one-way platforms on purpose
+    this.dropTimer = 0;      // > 0 while falling through planks on purpose
   }
 
   get left() { return this.x - this.w / 2; }
@@ -25,12 +24,7 @@ export class Body {
   sideBlocked(map, edgeX, top, bottom) {
     const tx = Math.floor(edgeX / TILE);
     const ty0 = Math.floor(top / TILE), ty1 = Math.floor(bottom / TILE);
-    for (let ty = ty0; ty <= ty1; ty++) {
-      const t = map.get(tx, ty);
-      if (!map.isBlock(t)) continue;
-      if (map.isSlope(map.get(tx, ty - 1))) continue; // the hidden mass under a ramp
-      return true;
-    }
+    for (let ty = ty0; ty <= ty1; ty++) if (map.isBlock(map.get(tx, ty))) return true;
     return false;
   }
 
@@ -42,7 +36,7 @@ export class Body {
     const bottom = this.y - (this.onGround ? STEP_UP - 2 : 3);
     let remaining = Math.abs(dx);
     while (remaining > 0) {
-      const step = Math.min(remaining, 8);
+      const step = Math.min(remaining, 6);
       remaining -= step;
       const nx = this.x + dir * step;
       const edge = dir > 0 ? nx + this.w / 2 - 0.01 : nx - this.w / 2;
@@ -57,7 +51,7 @@ export class Body {
     }
   }
 
-  // Vertical movement with landing on floors, one-way platforms, ladder tops and slopes.
+  // Vertical movement with landing on floors, planks, ladder tops and steps.
   moveY(map, dy) {
     this.hitHead = false;
     const wasGround = this.onGround;
@@ -66,24 +60,21 @@ export class Body {
       const oldY = this.y;
       const yFrom = wasGround ? oldY - STEP_UP : oldY - 1;
       const yTo = wasGround ? oldY + dy + SNAP_DOWN : oldY + dy;
-      let best = map.probeGround(this.x, yFrom, yTo, oneWay, true);
-      let bestSlope = best !== null && map.isSlope(map.at(this.x, best - 0.5));
-      const xs = [this.x - this.w / 2 + 4, this.x + this.w / 2 - 4];
-      for (const sx of xs) {
-        const g = map.probeGround(sx, Math.max(yFrom, oldY - 1), yTo, oneWay, false);
-        if (g !== null && (best === null || g < best - 0.5)) { best = g; bestSlope = false; }
+      let best = map.probeGround(this.x, yFrom, yTo, oneWay);
+      let type = map.lastType;
+      for (const sx of [this.x - this.w / 2 + 4, this.x + this.w / 2 - 4]) {
+        const g = map.probeGround(sx, Math.max(yFrom, oldY - 1), yTo, oneWay);
+        if (g !== null && (best === null || g < best - 0.5)) { best = g; type = map.lastType; }
       }
       if (best !== null) {
         this.y = best;
         this.vy = 0;
         this.onGround = true;
-        this.onSlope = bestSlope;
-        this.groundType = map.at(this.x, best + 1);
+        this.groundType = type;
         return true;
       }
       this.y = oldY + dy;
       this.onGround = false;
-      this.onSlope = false;
       return false;
     }
     // Moving up: stop under ceilings.
@@ -102,7 +93,6 @@ export class Body {
     }
     this.y = ny;
     this.onGround = false;
-    this.onSlope = false;
     return false;
   }
 

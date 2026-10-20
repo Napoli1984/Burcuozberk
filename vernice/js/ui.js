@@ -215,6 +215,11 @@ export class UI {
   }
 
   // ------------------------------------------------------------ screens
+  progress(p) {
+    const bar = this.root.querySelector('.ld-bar i');
+    if (bar) { bar.style.animation = 'none'; bar.style.width = Math.round(10 + p * 90) + '%'; }
+  }
+
   loading(text, done = false) {
     const el = this.$('loading');
     if (text) this.$('ld-s').textContent = text;
@@ -253,6 +258,8 @@ export class UI {
     this.root.classList.remove('playing');
     this.clearBarks();
     this.prompt(null);
+    clearTimeout(this.toastT); this.$('toast').classList.remove('on');
+    clearTimeout(this.areaT); this.$('area').classList.remove('on');
     this.$('end-title').textContent = title;
     this.$('end-text').textContent = text;
     this.$('end-stats').innerHTML = stats.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');

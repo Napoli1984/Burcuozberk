@@ -1,5 +1,5 @@
 // Tuning values for movement, combat and stealth. Distances are in world pixels, times in seconds.
-export const TILE = 40;
+export const TILE = 10;
 
 export const ADA = {
   width: 34,
@@ -18,7 +18,8 @@ export const ADA = {
   coyote: 0.1,
   jumpBuffer: 0.13,
   climbSpeed: 150,
-  ledgeReach: 168,       // how far above the feet the hands reach while airborne
+  stairSpeed: 120,
+  ledgeReach: 176,       // how far above the feet the hands reach while airborne
   hangDrop: 0.18,        // seconds before a dropped ledge can be grabbed again
   climbUpTime: 0.52,
   dodgeTime: 0.38,
@@ -51,4 +52,5 @@ export const STEALTH = {
   decay: 0.22,
 };
 
-export const VIEW = { width: 1280, height: 720 };
+// How much of the world is visible: the camera always shows this many world pixels in height.
+export const VIEW = { height: 680, heightSmall: 600 };

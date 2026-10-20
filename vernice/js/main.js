@@ -26,6 +26,17 @@ bindTouch(ui, inp);
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Renderer settings. One texture per draw batch: with several, some graphics drivers draw pieces of
+// the painted characters from the wrong picture. The scene has few textures, so this costs little.
+// ?mt=N and ?mip=0 in the address are only for testing.
+function renderConfig() {
+  const q = new URLSearchParams(location.search);
+  const r = { antialias: true, powerPreference: 'high-performance', maxTextures: 1 };
+  if (q.get('mip') !== '0') r.mipmapFilter = 'LINEAR_MIPMAP_LINEAR';
+  if (q.get('mt')) r.maxTextures = parseInt(q.get('mt'), 10);
+  return r;
+}
+
 async function boot() {
   ui.loading('Carico i caratteri…');
   try {
@@ -38,20 +49,39 @@ async function boot() {
       wait(2500),
     ]);
   } catch (e) { /* the game still works with fallback fonts */ }
-  ui.loading('Dipingo il convento…');
+  ui.loading('Apro le porte del convento…');
   await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 40)));
 
+  // The canvas draws at the screen's real resolution (up to 2x, and never more than ~2.6 million
+  // pixels, for small graphics cards); the camera then shows the same slice of the world everywhere.
+  const host = document.getElementById('game');
+  const measure = () => {
+    const w = host.clientWidth || innerWidth, h = host.clientHeight || innerHeight;
+    let d = Math.min(window.devicePixelRatio || 1, 2);
+    const cap = 2.6e6;
+    if (w * h * d * d > cap) d = Math.max(0.6, Math.sqrt(cap / (w * h)));
+    return { w, h, d };
+  };
+  const m0 = measure();
   const game = new Phaser.Game({
     type: Phaser.WEBGL,
     parent: 'game',
     backgroundColor: '#07060c',
-    scale: { mode: Phaser.Scale.EXPAND, width: 1280, height: 720, autoCenter: Phaser.Scale.CENTER_BOTH },
+    scale: { mode: Phaser.Scale.NONE, width: Math.round(m0.w * m0.d), height: Math.round(m0.h * m0.d), zoom: 1 / m0.d },
     audio: { noAudio: true },
     input: { keyboard: false, mouse: false, touch: false, gamepad: false },
-    render: { antialias: true, powerPreference: 'high-performance' },
+    render: renderConfig(),
     banner: false,
     fps: { target: 60, smoothStep: true },
   });
+  let fitT = 0;
+  const fit = () => {
+    const m = measure();
+    game.scale.setZoom(1 / m.d);
+    game.scale.resize(Math.round(m.w * m.d), Math.round(m.h * m.d));
+  };
+  addEventListener('resize', () => { clearTimeout(fitT); fitT = setTimeout(fit, 60); });
+  addEventListener('orientationchange', () => setTimeout(fit, 250));
   game.registry.set('ui', ui);
   game.registry.set('inp', inp);
   game.registry.set('snd', snd);

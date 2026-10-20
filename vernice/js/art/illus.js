@@ -50,8 +50,13 @@ function desk(ctx, w, h) {
   ctx.fillStyle = l; ctx.fillRect(0, 0, w, h);
 }
 
+// Painted pictures (loaded by the game) used instead of the drawn ones when available.
+const PICS = {};
+export function setIllustrationImages(map) { Object.assign(PICS, map); }
+
 function jar(ctx, w, h) {
   bg(ctx, w, h, '#2c1f45', '#0b0814');
+  if (PICS.jar) return paintedJar(ctx, w, h);
   // UV glow
   const uv = ctx.createRadialGradient(200, 120, 10, 200, 140, 230); uv.addColorStop(0, 'rgba(160,110,255,0.5)'); uv.addColorStop(1, 'rgba(160,110,255,0)');
   ctx.fillStyle = uv; ctx.fillRect(0, 0, w, h);
@@ -86,6 +91,36 @@ function jar(ctx, w, h) {
   ctx.restore();
 }
 
+function paintedJar(ctx, w, h) {
+  const uv = ctx.createRadialGradient(190, 120, 10, 190, 140, 240); uv.addColorStop(0, 'rgba(160,110,255,0.55)'); uv.addColorStop(1, 'rgba(160,110,255,0)');
+  ctx.fillStyle = uv; ctx.fillRect(0, 0, w, h);
+  const im = PICS.jar, hh = 236, ww = hh * im.width / im.height;
+  const x = 190 - ww / 2, y = 150 - hh / 2;
+  ctx.save();
+  ctx.shadowColor = 'rgba(150,100,255,0.6)'; ctx.shadowBlur = 24;
+  ctx.drawImage(im, x, y, ww, hh);
+  ctx.restore();
+  // under UV light dammar resin glows a pale green
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const gl = ctx.createRadialGradient(178, 200, 4, 178, 200, 70); gl.addColorStop(0, 'rgba(150,255,140,0.42)'); gl.addColorStop(1, 'rgba(150,255,140,0)');
+  ctx.fillStyle = gl; ctx.fillRect(100, 120, 160, 160);
+  ctx.restore();
+  // a fresh fingerprint on the lid
+  ctx.strokeStyle = 'rgba(220,255,210,0.8)'; ctx.lineWidth = 1.1;
+  for (let k = 0; k < 6; k++) { ctx.beginPath(); ctx.ellipse(210, 47, 3 + k * 2.4, 1.6 + k * 1.1, 0.2, 0, TAU); ctx.stroke(); }
+  // the memory card in its little bag
+  ctx.save(); ctx.translate(395, 170); ctx.rotate(-0.18);
+  ctx.fillStyle = 'rgba(230,240,255,0.18)'; ctx.strokeStyle = 'rgba(230,240,255,0.5)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(-58, -66, 116, 132, 8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(240,230,190,0.35)'; ctx.beginPath(); ctx.roundRect(-46, -50, 92, 104, 10); ctx.fill();
+  ctx.fillStyle = '#1b1c22'; ctx.beginPath(); ctx.moveTo(-26, -40); ctx.lineTo(18, -40); ctx.lineTo(26, -32); ctx.lineTo(26, 40); ctx.lineTo(-26, 40); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#c9a54a'; for (let i = 0; i < 8; i++) ctx.fillRect(-22 + i * 5.6, -36, 3, 12);
+  ctx.fillStyle = '#e6e6ea'; ctx.font = '700 11px Manrope, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('microSD', 0, 12);
+  ctx.fillStyle = '#9aa0ad'; ctx.font = '600 9px Manrope, sans-serif'; ctx.fillText('64 GB', 0, 28);
+  ctx.restore();
+}
+
 function card(ctx, w, h) {
   bg(ctx, w, h, '#1f2430', '#08090d');
   // a phone screen with infrared reflectograms: on the left the drawing under the paint, on the right nothing
@@ -112,6 +147,16 @@ function card(ctx, w, h) {
 
 function sketch(ctx, w, h) {
   bg(ctx, w, h, '#2a2620', '#0d0b09');
+  if (PICS.sketch) {
+    const im = PICS.sketch, hh = 268, ww = hh * im.width / im.height;
+    ctx.save(); ctx.translate(w / 2, h / 2); ctx.rotate(-0.04);
+    ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
+    ctx.drawImage(im, -ww / 2, -hh / 2, ww, hh);
+    ctx.restore();
+    const l = ctx.createRadialGradient(w * 0.3, 20, 5, w * 0.3, 20, 320); l.addColorStop(0, 'rgba(160,180,255,0.16)'); l.addColorStop(1, 'rgba(160,180,255,0)');
+    ctx.fillStyle = l; ctx.fillRect(0, 0, w, h);
+    return;
+  }
   ctx.save(); ctx.translate(w / 2, h / 2); ctx.rotate(-0.05);
   ctx.fillStyle = '#efe6d4'; ctx.fillRect(-190, -120, 380, 240);
   ctx.fillStyle = 'rgba(120,100,70,0.12)'; for (let i = 0; i < 20; i++) ctx.fillRect(-190, -120 + i * 12, 380, 1);

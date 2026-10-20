@@ -1,152 +1,181 @@
-// Level 5 (prototype): the restoration lab in the former convent of San Domenico.
-// The map is built with small helper calls instead of a hand-typed grid, so it is easy to adjust.
+// Level 5 (prototype): the street of San Domenico, the cloister, Lale's lab, the church with its
+// crypt and the old aqueduct. One continuous world, painted section by section (see bgdata.js).
+// Collision is a fine grid (TILE = 10 world px) filled from the shapes below; ladders and the
+// scaffolding planks are separate objects. All numbers are world pixels; the main floor is y = 600.
 import { TILE } from './config.js';
 
 export const T = { EMPTY: 0, SOLID: 1, ONEWAY: 2, LADDER: 3, SLOPE_UP: 4, SLOPE_DOWN: 5, BREAK: 6 };
-// SLOPE_UP rises to the right ( / ), SLOPE_DOWN falls to the right ( \ ).
+
+// Where each painted section starts (must match bgdata.js).
+export const X = { street: 0, w1: 3245, cloister: 3325, w2: 7003, lab: 7063, w3: 8331, church: 8401, w4: 10052, aqueduct: 10142, end: 11626 };
 
 export function buildLevel5() {
-  const W = 120, H = 36;
+  const width = 11630, height = 1100;
+  const W = Math.ceil(width / TILE), H = Math.ceil(height / TILE);
   const tiles = new Uint8Array(W * H);
-  const set = (x, y, v) => { if (x >= 0 && y >= 0 && x < W && y < H) tiles[y * W + x] = v; };
-  const fill = (x0, y0, x1, y1, v) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(x, y, v); };
+  const tx = (x) => Math.round(x / TILE);
+  // Fill a world rectangle [x0, x1) x [y0, y1).
+  const rect = (x0, y0, x1, y1, v) => {
+    const a = Math.max(0, tx(x0)), b = Math.min(W, tx(x1)), c = Math.max(0, tx(y0)), d = Math.min(H, tx(y1));
+    for (let y = c; y < d; y++) for (let x = a; x < b; x++) tiles[y * W + x] = v;
+  };
+  const S = T.SOLID, E = T.EMPTY;
+  const cl = X.cloister, lab = X.lab, ch = X.church, aq = X.aqueduct;
 
-  // Ground everywhere below row 22, air above.
-  fill(0, 22, W - 1, H - 1, T.SOLID);
-  // Left boundary: the house across the street.
-  fill(0, 0, 1, 21, T.SOLID);
-  // Right boundary behind the garden gate.
-  fill(W - 1, 0, W - 1, 21, T.SOLID);
+  // ---- ground and walls
+  rect(0, 600, X.w4, height, S);                 // street, cloister, lab and the church floor
+  rect(0, -100, 40, 600, S);                     // the end of the street on the left
+  rect(X.w1, 118, X.w1 + 80, 432, S);            // convent wall above its doorway
+  rect(X.w2, 40, X.w2 + 60, 432, S);             // lab wall
+  rect(X.w3, 24, X.w3 + 70, 432, S);             // wall between lab and church
 
-  // Convent outer wall with the open gate (rows 18-21).
-  fill(14, 6, 14, 17, T.SOLID);
-  // Left wing of the cloister: closed upper floor above a covered walkway.
-  fill(15, 7, 24, 17, T.SOLID);
-  // Right wing: loggia floor (15-16), roof slab (9-10).
-  fill(38, 15, 51, 16, T.SOLID);
-  fill(38, 9, 51, 10, T.SOLID);
-  // Gardener's ladder against the loggia.
-  fill(37, 15, 37, 21, T.LADDER);
+  // ---- cloister: the loggia's upper floor, with a gap where the ladder comes up
+  rect(cl + 2660, 340, X.w2, 380, S);
+  rect(cl + 3316, 340, cl + 3396, 380, E);
 
-  // Lab building: left wall with two doorways, floor between the two storeys with a hatch, roof slab.
-  fill(52, 6, 52, 21, T.SOLID);
-  fill(52, 18, 52, 21, T.EMPTY);      // ground doorway from the cloister
-  fill(52, 11, 52, 14, T.EMPTY);      // upper doorway from the loggia
-  fill(53, 15, 65, 16, T.SOLID);      // ceiling of the lab / floor of the storage room
-  fill(58, 15, 58, 16, T.EMPTY);      // hatch
-  fill(58, 15, 58, 21, T.LADDER);
-  fill(53, 6, 65, 10, T.SOLID);       // roof mass above the storage room
-  // Wall between lab and nave, with the doorway.
-  fill(66, 4, 66, 21, T.SOLID);
-  fill(66, 18, 66, 21, T.EMPTY);
+  // ---- lab: the storage loft over the workshop, with the hatch
+  rect(lab + 507, 310, lab + 1195, 370, S);
+  rect(lab + 690, 310, lab + 762, 370, E);
 
-  // Nave: vault on top, apse wall on the right.
-  fill(66, 0, 104, 3, T.SOLID);
-  fill(104, 4, 104, 21, T.SOLID);
-  // Raised presbytery.
-  fill(82, 17, 103, 21, T.SOLID);
-  // Ramp down to the crypt (\), carved out of the ground.
-  for (let i = 0; i <= 8; i++) {
-    const x = 78 + i;
-    fill(x, 22, x, 22 + i - 1, T.EMPTY);
-    set(x, 22 + i, T.SLOPE_DOWN);
+  // ---- church: crypt under the nave, stairwell, landing and the stairs down
+  rect(ch + 15, 640, X.w4, 900, E);              // the crypt (under the nave floor slab 600-640)
+  rect(ch + 55, 600, ch + 175, 770, E);          // stairwell through the floor
+  rect(ch + 15, 770, ch + 215, 900, S);          // the landing and the masonry under it
+  for (let x = ch + 215; x < ch + 380; x += TILE) {   // the flight of steps, 770 -> 900
+    const y = 770 + ((x + TILE / 2 - (ch + 215)) / 165) * 130;
+    rect(x, Math.round(y / TILE) * TILE, x + TILE, 900, S);
   }
-  // Ladder up to the presbytery, standing over the top of the ramp.
-  fill(81, 17, 81, 24, T.LADDER);
-  // Crypt.
-  fill(87, 25, 101, 30, T.EMPTY);
-  // The end wall of the crypt: looks like every other wall, but it breaks.
-  fill(102, 25, 103, 30, T.BREAK);
-  // Behind it: the old well shaft and the aqueduct.
-  fill(104, 25, 105, 34, T.EMPTY);
-  fill(105, 31, 105, 34, T.LADDER);
-  fill(104, 31, 114, 34, T.EMPTY);
-  fill(114, 22, 114, 30, T.EMPTY);
-  fill(114, 22, 114, 34, T.LADDER);
 
-  // Scaffolding around the altarpiece (one-way planks and ladders).
-  fill(92, 13, 101, 13, T.ONEWAY);
-  fill(92, 9, 101, 9, T.ONEWAY);
-  fill(93, 5, 101, 5, T.ONEWAY);
-  fill(92, 14, 92, 16, T.LADDER);
-  fill(100, 10, 100, 12, T.LADDER);
-  fill(93, 6, 93, 8, T.LADDER);
-  // Make the ladder tops line up with the planks they reach.
-  set(92, 13, T.LADDER); set(100, 9, T.LADDER); set(93, 5, T.LADDER);
+  // ---- apse wall between church and garden; at crypt level part of it is only a thin skin
+  rect(X.w4, 24, aq, height, S);
+  rect(X.w4, 750, aq, 900, T.BREAK);
 
-  const px = (t) => t * TILE;
-  const ground = px(22);
+  // ---- behind the apse: garden, earth, the aqueduct tunnel and the well shaft
+  rect(aq, 480, width, height, S);
+  rect(aq, 730, X.end, 900, E);                  // the tunnel (walkway at 900)
+  rect(aq + 760, 900, X.end, 910, E);            // the water channel is a step lower
+  rect(aq + 921, 480, aq + 1046, 730, E);        // the well shaft
+  rect(aq + 921, 480, aq + 1046, 490, S);        // ...covered by the well head, except over the ladder
+  rect(aq + 995, 480, aq + 1035, 490, E);
+  rect(X.end, -100, width, height, S);           // end of the world on the right
+
+  const ladders = [
+    { id: 'loggia', x: cl + 3356, top: 340, bottom: 600, w: 40 },
+    { id: 'loft', x: lab + 726, top: 310, bottom: 600, w: 40 },
+    { id: 'stairs', x: ch + 115, top: 600, bottom: 770, w: 120, stairs: true },
+    { id: 'scaf-a', x: ch + 1305, top: 458, bottom: 600, w: 36 },
+    { id: 'scaf-b', x: ch + 1333, top: 208, bottom: 458, w: 36 },
+    { id: 'well', x: aq + 1015, top: 480, bottom: 910, w: 40 },
+  ];
+  // One-way planks (sloped segments): the scaffolding around the altarpiece, and the boards that
+  // cover the openings where a ladder comes up through a floor (so Ada can walk over them).
+  const planks = [
+    { x0: cl + 3310, y0: 340, x1: cl + 3400, y1: 340 },
+    { x0: lab + 684, y0: 310, x1: lab + 768, y1: 310 },
+    { x0: ch + 1290, y0: 211, x1: ch + 1590, y1: 189 },
+    { x0: ch + 1290, y0: 336, x1: ch + 1597, y1: 320 },
+    { x0: ch + 1275, y0: 459, x1: ch + 1594, y1: 452 },
+  ];
 
   const regions = [
-    { id: 'street', x0: 0, x1: 14, y0: 0, y1: 21, ambient: 0.44, color: [150, 168, 220], sky: true, material: 'cobble', name: 'Via di San Domenico' },
-    { id: 'cloister', x0: 15, x1: 51, y0: 0, y1: 21, ambient: 0.3, color: [150, 160, 210], material: 'stone', name: 'Il chiostro' },
-    { id: 'garden', x0: 25, x1: 37, y0: 0, y1: 21, ambient: 0.46, color: [140, 165, 225], sky: true, material: 'grass' },
-    { id: 'lab', x0: 52, x1: 65, y0: 0, y1: 21, ambient: 0.28, color: [170, 150, 190], material: 'wood', name: 'Il laboratorio' },
-    { id: 'nave', x0: 66, x1: 104, y0: 0, y1: 21, ambient: 0.32, color: [140, 155, 210], material: 'stone', name: 'La navata' },
-    { id: 'crypt', x0: 78, x1: 103, y0: 22, y1: 31, ambient: 0.2, color: [150, 140, 150], material: 'stone', name: 'La cripta' },
-    { id: 'aqueduct', x0: 104, x1: 115, y0: 22, y1: 35, ambient: 0.13, color: [110, 130, 150], material: 'water', name: "L'acquedotto" },
-    { id: 'garden2', x0: 105, x1: 119, y0: 0, y1: 21, ambient: 0.46, color: [140, 165, 225], sky: true, material: 'grass', name: "Il giardino dietro l'abside" },
+    { id: 'street', x0: 0, x1: X.w1, y0: -200, y1: 1100, ambient: 0.46, color: [150, 168, 220], sky: true, material: 'cobble', name: 'Via di San Domenico' },
+    { id: 'cloister', x0: X.w1, x1: cl + 1500, y0: -200, y1: 1100, ambient: 0.36, color: [170, 160, 200], material: 'stone', name: 'Il chiostro' },
+    { id: 'garden', x0: cl + 1500, x1: cl + 2600, y0: -200, y1: 1100, ambient: 0.48, color: [140, 165, 225], sky: true, material: 'grass' },
+    { id: 'loggia', x0: cl + 2600, x1: X.w2, y0: -200, y1: 1100, ambient: 0.36, color: [170, 160, 200], material: 'stone' },
+    { id: 'lab', x0: X.w2, x1: X.w3, y0: -200, y1: 1100, ambient: 0.3, color: [170, 150, 190], material: 'wood', name: 'Il laboratorio' },
+    { id: 'nave', x0: X.w3, x1: X.w4, y0: -200, y1: 640, ambient: 0.32, color: [140, 155, 210], material: 'stone', name: 'La navata' },
+    { id: 'crypt', x0: ch, x1: X.w4, y0: 640, y1: 1100, ambient: 0.22, color: [160, 145, 140], material: 'stone', name: 'La cripta' },
+    { id: 'aqueduct', x0: X.w4, x1: width, y0: 700, y1: 1100, ambient: 0.24, color: [150, 130, 120], material: 'stone', name: 'L’acquedotto' },
+    { id: 'channel', x0: aq + 760, x1: width, y0: 700, y1: 1100, ambient: 0.24, color: [120, 140, 175], material: 'water' },
+    { id: 'garden2', x0: aq, x1: width, y0: -200, y1: 700, ambient: 0.48, color: [140, 165, 225], sky: true, material: 'grass', name: 'Il giardino dietro l’abside' },
   ];
 
+  const W_ = (r, g, b) => [r, g, b];
+  const warm = W_(255, 196, 120), cool = W_(150, 175, 255);
   const lights = [
-    { id: 'street-lamp', x: px(7.5), y: px(15.6), r: 380, color: [255, 196, 120], i: 0.78 },
-    { id: 'arcade-left', x: px(19.5), y: px(18.6), r: 300, color: [255, 190, 110], i: 0.72 },
-    { id: 'arcade-right', x: px(45), y: px(17.6), r: 310, color: [255, 190, 110], i: 0.72 },
-    { id: 'loggia', x: px(46), y: px(11.8), r: 230, color: [255, 190, 110], i: 0.5 },
-    { id: 'desk', x: px(60.2), y: px(19.4), r: 230, color: [255, 200, 130], i: 0.68 },
-    { id: 'uv', x: px(62.2), y: px(18.2), r: 260, color: [170, 120, 255], i: 0.62 },
-    { id: 'storage', x: px(61), y: px(11.6), r: 200, color: [255, 190, 120], i: 0.4 },
-    { id: 'candles', x: px(84.5), y: px(16.2), r: 270, color: [255, 180, 100], i: 0.6 },
-    { id: 'nave-moon', x: px(72), y: px(12), r: 330, color: [150, 175, 255], i: 0.32 },
-    { id: 'crypt-bulb', x: px(95), y: px(25.6), r: 290, color: [255, 205, 140], i: 0.56 },
-    { id: 'gate-lantern', x: px(116.6), y: px(17.4), r: 300, color: [255, 196, 120], i: 0.66 },
+    { id: 'street-lamp', x: 1772, y: 262, r: 400, color: warm, i: 0.8 },
+    { id: 'arch-lamp', x: 1000, y: 352, r: 200, color: warm, i: 0.4 },
+    { id: 'house-lamp', x: 92, y: 330, r: 220, color: warm, i: 0.4 },
+    { id: 'shop-window', x: 2215, y: 400, r: 300, color: warm, i: 0.62, glow: false },
+    ...[228, 518, 778, 1188, 1438].map((x, i) => ({ id: 'lantern-c' + i, x: cl + x, y: [340, 325, 310, 282, 322][i], r: 270, color: warm, i: 0.64 })),
+    { id: 'lantern-arcade', x: cl + 1628, y: 352, r: 200, color: warm, i: 0.45 },
+    { id: 'moon', x: cl + 2420, y: 100, r: 700, color: cool, i: 0.28, glow: false },
+    { id: 'lantern-l1', x: cl + 2760, y: 425, r: 270, color: warm, i: 0.66 },
+    { id: 'lantern-l2', x: cl + 3150, y: 425, r: 270, color: warm, i: 0.66 },
+    { id: 'desk-lamp', x: lab + 432, y: 487, r: 240, color: W_(255, 200, 130), i: 0.7 },
+    { id: 'uv', x: lab + 665, y: 482, r: 260, color: W_(170, 120, 255), i: 0.62 },
+    { id: 'lab-window', x: lab + 436, y: 356, r: 260, color: cool, i: 0.3, glow: false },
+    { id: 'loft', x: lab + 900, y: 240, r: 260, color: warm, i: 0.22, glow: false },
+    ...[20, 335, 545, 665, 860].map((x, i) => ({ id: 'candles' + i, x: ch + x, y: 482, r: 220, color: W_(255, 180, 100), i: 0.5 })),
+    { id: 'window-1', x: ch + 460, y: 330, r: 340, color: cool, i: 0.3, glow: false },
+    { id: 'window-2', x: ch + 770, y: 330, r: 340, color: cool, i: 0.3, glow: false },
+    { id: 'crypt-bulb', x: ch + 1040, y: 706, r: 300, color: W_(255, 205, 140), i: 0.58 },
+    { id: 'alcove', x: aq + 78, y: 840, r: 200, color: warm, i: 0.42, glow: false },
+    { id: 'well', x: aq + 985, y: 700, r: 320, color: cool, i: 0.42, glow: false },
+    { id: 'gate-lantern', x: aq + 1350, y: 384, r: 320, color: warm, i: 0.68 },
+    { id: 'moon-2', x: aq + 940, y: 160, r: 700, color: cool, i: 0.26, glow: false },
   ];
 
+  // Hiding places: Ada slips behind them; the painted piece in front of her is in bgdata.js (fronts).
   const hides = [
-    { id: 'siepe-1', x: px(27.3), y: ground - 66, w: 102, h: 66, label: 'Nasconditi nella siepe' },
-    { id: 'siepe-2', x: px(33.9), y: ground - 66, w: 102, h: 66, label: 'Nasconditi nella siepe' },
-    { id: 'tela', x: px(54.1), y: ground - 130, w: 70, h: 130, label: 'Nasconditi dietro la tela' },
-    { id: 'tenda', x: px(68.4), y: ground - 160, w: 64, h: 160, label: 'Nasconditi dietro la tenda' },
-    { id: 'casse', x: px(89.6), y: px(31) - 96, w: 92, h: 96, label: 'Nasconditi dietro le casse' },
-    { id: 'siepe-3', x: px(107.6), y: ground - 66, w: 110, h: 66, label: 'Nasconditi nella siepe' },
+    { id: 'siepe-1', x: cl + 1900, y: 600, w: 225, label: 'Nasconditi nella siepe' },
+    { id: 'siepe-2', x: cl + 2330, y: 600, w: 235, label: 'Nasconditi nella siepe' },
+    { id: 'tela', x: lab + 776, y: 600, w: 62, label: 'Nasconditi dietro le tele' },
+    { id: 'tele', x: lab + 1012, y: 600, w: 78, label: 'Nasconditi dietro le tele' },
+    { id: 'tenda', x: ch + 1010, y: 600, w: 170, label: 'Nasconditi dietro la tenda' },
+    { id: 'casse', x: ch + 905, y: 900, w: 222, label: 'Nasconditi dietro le casse' },
   ];
 
   const checkpoints = [
-    { id: 'strada', x: px(4), y: ground, x0: 0, x1: 13 },
-    { id: 'chiostro', x: px(16.2), y: ground, x0: 15, x1: 36 },
-    { id: 'laboratorio', x: px(53.4), y: ground, x0: 52, x1: 65 },
-    { id: 'navata', x: px(67.6), y: ground, x0: 66, x1: 80, y1: 21 },
-    { id: 'cripta', x: px(88.4), y: px(31), x0: 86, x1: 101, y0: 24 },
-    { id: 'acquedotto', x: px(107), y: px(35), x0: 104, x1: 113, y0: 30 },
-    { id: 'giardino', x: px(111), y: ground, x0: 106, x1: 119, y1: 21 },
+    { id: 'strada', x: 940, y: 600, x0: 0, x1: 3200 },
+    { id: 'chiostro', x: cl + 90, y: 600, x0: X.w1, x1: cl + 1400 },
+    { id: 'laboratorio', x: lab + 70, y: 600, x0: X.w2, x1: X.w3, y1: 610 },
+    { id: 'navata', x: ch + 30, y: 600, x0: X.w3, x1: X.w4, y1: 610 },
+    { id: 'cripta', x: ch + 430, y: 900, x0: ch + 380, x1: X.w4, y0: 800 },
+    { id: 'acquedotto', x: aq + 80, y: 900, x0: X.w4, x1: X.end, y0: 800 },
+    { id: 'giardino', x: aq + 1100, y: 480, x0: aq, x1: X.end, y1: 490 },
+  ];
+
+  // Doors in the painted walls that lead somewhere else (fade, then Ada comes out at the other end).
+  const portals = [
+    { id: 'loggia-door', x: cl + 3560, y: 340, w: 70, to: 'loft-door', label: 'Entra nella soffitta' },
+    { id: 'loft-door', x: lab + 570, y: 310, w: 56, to: 'loggia-door', label: 'Esci sul loggiato' },
+  ];
+
+  const exits = [
+    { id: 'portone', x0: X.w1 - 40, x1: X.w1 + 10, y: 600 },        // back through the convent door
+    { id: 'giardino', x: aq + 1302, y: 480, w: 120, label: 'Esci dal cancello' },
   ];
 
   const level = {
-    W, H, tiles, regions, lights, hides, checkpoints,
-    width: W * TILE, height: H * TILE, ground,
-    start: { x: px(4.2), y: ground },
-    npc: { id: 'fausto', x: px(10.3), y: ground },
-    guard: { x: px(31), y: ground, patrol: [px(16.6), px(50.6)] },
-    recoverer: { x: px(72.4), y: ground },
-    jar: { x: px(63.55), y: px(19.62) },
-    desk: { x: px(59.9), y: ground },
-    sketch: { x: px(97.5), y: px(5) },
-    cans: [{ x: px(56.4), y: ground }, { x: px(21.2), y: ground }, { x: px(93.2), y: px(31) }],
-    cart: { x: px(74.6), y: ground },
-    exits: [
-      { id: 'portone', x0: 0, x1: px(3.1), needsClue: true },
-      { id: 'giardino', x0: px(116.6), x1: px(120), needsClue: true },
+    W, H, tiles, ladders, planks, regions, lights, hides, checkpoints, portals, exits,
+    width, height, ground: 600,
+    start: { x: 960, y: 600 },
+    npcs: [
+      { id: 'granny', x: 1388, y: 600, facing: 1, h: 114, bark: ['Buonasera, signorina. A quest’ora il convento è chiuso, sa?', 'Chieda a Fausto, il restauratore. Lui sa tutto di tutti.'] },
+      { id: 'flatcap', x: 1915, y: 600, facing: -1, h: 131, bark: ['«Fondazione Ardenzi: sette capolavori tornano a casa.» Bah. A me sembrano uguali a prima.'] },
+      { id: 'fausto', x: 2470, y: 600, facing: -1, h: 128, talk: true },
+      { id: 'marta', x: 2870, y: 600, facing: 1, h: 125, talk: true },
     ],
+    guard: { x: cl + 2100, y: 600, route: [{ x: cl + 1250, wait: 2.6 }, { x: cl + 2150, wait: 1.6 }, { x: cl + 3230, wait: 2.6 }], routeI: 2 },
+    guard2: { x: ch + 700, y: 600, route: [{ x: ch + 300, wait: 2.4 }, { x: ch + 760, wait: 1.4 }, { x: ch + 1230, wait: 2.8 }], routeI: 2 },
+    recoverer: { x: cl + 1700, y: 600 },
+    jar: { x: lab + 632, y: 518 },
+    desk: { x: lab + 462, y: 600 },
+    sketch: { x: ch + 1540, y: 193 },
+    cart: { x: cl + 1620, y: 600 },
+    cans: [{ x: cl + 960, y: 600 }, { x: lab + 300, y: 600 }, { x: ch + 1180, y: 900 }],
     hints: [
-      { id: 'move', x0: 0, x1: px(6), text: 'Muoviti e salta. Su telefono usa la levetta a sinistra.' },
-      { id: 'talk', x0: px(7.5), x1: px(13), text: 'Avvicinati al restauratore e premi Azione per parlare.' },
-      { id: 'sneak', x0: px(15), x1: px(22), text: 'Cammina piano o accovacciati: correndo la guardia ti sente.' },
-      { id: 'observe', x0: px(22), x1: px(28), text: 'Tieni premuto Osserva per studiare il giro della guardia.' },
-      { id: 'hide', x0: px(26), x1: px(30), text: 'Nella siepe la guardia non ti vede.' },
-      { id: 'ladder', x0: px(36), x1: px(38), text: 'Su con la scala: dalla loggia si entra nel laboratorio dall’alto.' },
-      { id: 'lab', x0: px(53), x1: px(57), text: 'Cerca dove Lale lavorava.' },
-      { id: 'ledge', x0: px(76), x1: px(80.5), y1: 21, text: 'Salta verso un bordo per aggrapparti, poi Su per salire.' },
-      { id: 'crypt', x0: px(88), x1: px(92), y0: 24, text: 'La cripta. Le casse portano tutte la sigla «PA».' },
+      { id: 'move', x0: 0, x1: 1400, text: 'move' },
+      { id: 'talk', x0: 2250, x1: 2560 },
+      { id: 'sneak', x0: X.w1, x1: cl + 600 },
+      { id: 'observe', x0: cl + 700, x1: cl + 1150 },
+      { id: 'hide', x0: cl + 1800, x1: cl + 1950 },
+      { id: 'ledge', x0: cl + 2560, x1: cl + 2700, y1: 610 },
+      { id: 'ladder', x0: cl + 3260, x1: cl + 3440, y1: 610 },
+      { id: 'lab', x0: X.w2, x1: lab + 260, y1: 610 },
+      { id: 'stairs', x0: ch, x1: ch + 220, y1: 610 },
+      { id: 'crypt', x0: ch + 820, x1: ch + 1100, y0: 800 },
     ],
   };
   return level;

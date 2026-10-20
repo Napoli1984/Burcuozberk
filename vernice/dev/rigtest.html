@@ -1,45 +1,48 @@
 <!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#1b2030}</style></head><body>
-<script>
-if (!CanvasRenderingContext2D.prototype.roundRect) CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) { this.rect(x, y, w, h); return this; };
-</script>
 <script src="../lib/phaser-4.2.1.min.js"></script>
 <script type="module">
-import { paintCharacters } from '../js/art/chars.js';
-import { Rig } from '../js/rig.js';
+import { Rig, registerRig } from '../js/rig.js';
 import { A } from '../js/anim.js';
+const params = new URLSearchParams(location.search);
+const who = (params.get('c') || 'ada').split(',');
 class S extends Phaser.Scene {
+  preload() {
+    for (const c of who) {
+      this.load.json('rigdata-' + c, '../img/chars/' + c + '.json');
+      this.load.image('rig-' + c, '../img/chars/' + c + '.webp');
+    }
+  }
   create() {
-    const chars = paintCharacters(this);
-    const poses = [
-      ['idle', A.idle(0)], ['walk0', A.walk(0)], ['walk1', A.walk(1.6)], ['run0', A.run(0)], ['run1', A.run(1.6)],
+    const g = this.add.graphics();
+    const defs = who.map((c) => { const d = this.cache.json.get('rigdata-' + c); registerRig(this, d); return d; });
+    const style = (i) => (who[i] === 'ada' ? 'ada' : 'man');
+    const poses = (st) => [
+      ['idle', A.idle(0, st)], ['walk0', A.walk(0, st)], ['walk1', A.walk(1.6, st)], ['run0', A.run(0, st)], ['run1', A.run(1.6, st)],
       ['crouch', A.crouch(0)], ['jump', A.jump(-500)], ['fall', A.fall(600)], ['hang', A.hang(0)], ['ladder', A.ladder(0)],
       ['guard', A.guard(0)], ['jab', A.punch(0, 0.35)], ['cross', A.punch(1, 0.35)], ['kick', A.kick(0.5)], ['roll', A.roll(0.3)],
-      ['hurt', A.hurt(0)], ['ko', A.lying(0)], ['reach', A.reach(0.5)], ['throw', A.throwing(0.5)], ['push', A.push(0)],
+      ['hurt', A.hurt(0)], ['ko', A.lying(0)], ['reach', A.reach(0.5)], ['throw', A.throwing(0.5)], ['patrol', A.patrol(0.8)],
     ];
-    const g = this.add.graphics();
-    poses.forEach(([name, p], i) => {
-      const x = 70 + (i % 10) * 125, y = 200 + Math.floor(i / 10) * 230;
-      g.lineStyle(1, 0x445066).lineBetween(x - 55, y, x + 55, y);
-      const r = new Rig(this, chars.ada, {});
-      r.update(p, x, y, 0.016, 1, {});
-      this.add.text(x - 50, y + 8, name, { fontSize: '13px', color: '#9fb0d0' });
+    const zoom = parseFloat(params.get('z') || '1');
+    defs.forEach((def, ci) => {
+      poses(style(ci)).forEach(([name, p], i) => {
+        const x = (70 + (i % 10) * 125) , y = (190 + Math.floor(i / 10) * 220) + ci * 0;
+        g.lineStyle(1, 0x445066).lineBetween(x - 55, y, x + 55, y);
+        const r = new Rig(this, def, {});
+        r.update(p, x, y, 0.016, 1, {});
+        this.add.text(x - 50, y + 8, name, { fontSize: '13px', color: '#9fb0d0' });
+      });
+      const big = new Rig(this, def, {});
+      big.update(params.get('pose') ? A[params.get('pose')](0.8) : A.idle(0, style(ci)), 300 + ci * 300, 700, 0.016, 1, {});
+      big.root.setScale(2.2 * zoom);
+      const big2 = new Rig(this, def, {});
+      big2.update(A.walk(0.9, style(ci)), 700 + ci * 300, 700, 0.016, 1, {});
+      big2.root.setScale(2.2 * zoom);
+      const big3 = new Rig(this, def, {});
+      big3.update(A.run(0.5, style(ci)), 1050, 700, 0.016, 1, {});
+      big3.root.setScale(2.2 * zoom);
     });
-    const men = [['guard', chars.guard], ['recoverer', chars.recoverer], ['fausto', chars.fausto]];
-    men.forEach(([name, def], i) => {
-      const x = 120 + i * 160, y = 690;
-      const r = new Rig(this, def, { footPts: [[-5.8, 8.2], [13.5, 8.2]] });
-      r.update(i === 0 ? A.patrol(0.8) : A.idle(0, 'man'), x, y, 0.016, 1, {});
-      g.lineStyle(1, 0x445066).lineBetween(x - 55, y, x + 55, y);
-      this.add.text(x - 50, y + 8, name, { fontSize: '13px', color: '#9fb0d0' });
-    });
-    const big = new Rig(this, chars.ada, {});
-    big.update(A.walk(0.8), 760, 700, 0.016, 1, {});
-    big.root.setScale(2.4);
-    const big2 = new Rig(this, chars.guard, { footPts: [[-5.8, 8.2], [13.5, 8.2]] });
-    big2.update(A.patrol(0.4), 1040, 700, 0.016, 1, {});
-    big2.root.setScale(2.4);
     window.__ready = true;
   }
 }
-new Phaser.Game({ type: Phaser.WEBGL, width: 1280, height: 720, backgroundColor: '#1b2030', scene: S, parent: document.body });
+new Phaser.Game({ type: Phaser.WEBGL, width: 1280, height: 720, backgroundColor: '#1b2030', scene: S, parent: document.body, banner: false });
 </script></body></html>

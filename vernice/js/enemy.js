@@ -7,7 +7,6 @@ import { Rig } from './rig.js';
 import { A } from './anim.js';
 import { clamp, approach, damp, sign, lerp, rectsOverlap } from './util.js';
 
-const FEET = [[-5.8, 8.2], [13.5, 8.2]];
 const TAU = Math.PI * 2;
 const DEG = Math.PI / 180;
 const SPEED = { patrol: 84, check: 118, hunt: 175, chase: 240, back: 100 };
@@ -46,7 +45,7 @@ export class Enemy {
     this.kind = o.kind;
     this.lines = LINES[o.kind];
     this.body = new Body(o.x, o.y, 38, 128);
-    this.rig = new Rig(scene, def, { rest: A.idle(0, 'man'), footPts: FEET });
+    this.rig = new Rig(scene, def, { rest: A.idle(0, 'man') });
     this.rig.setDepth(o.depth ?? 24);
     this.facing = o.facing ?? 1;
     this.maxHp = this.hp = o.hp;
@@ -54,8 +53,9 @@ export class Enemy {
     this.routeI = o.routeI ?? 1;
     this.routeDir = 1;
     this.lantern = !!o.lantern;
-    this.half = (o.lantern ? STEALTH.coneAngle / 2 : 50) * DEG;
-    this.tilt = (o.lantern ? 5 : 10) * DEG;
+    this.torch = !!o.torch;            // a narrow, long beam instead of the lantern's glow
+    this.half = (o.lantern ? STEALTH.coneAngle / 2 : o.torch ? 17 : 50) * DEG;
+    this.tilt = (o.lantern ? 5 : o.torch ? 4 : 10) * DEG;
     this.alertness = 1;
     this.state = o.state || 'patrol';
     this.t = 0;
@@ -122,12 +122,13 @@ export class Enemy {
   // ------------------------------------------------------------ senses
   eyePoint() {
     if (this.lantern && this.rig.lanternPos.x) return { x: this.rig.lanternPos.x, y: this.rig.lanternPos.y - 6 };
+    if (this.torch && this.rig.handPos.x) return { x: this.rig.handPos.x + this.facing * 30, y: this.rig.handPos.y + 2 };
     return { x: this.rig.headPos.x || this.body.x, y: (this.rig.headPos.y || this.body.y - 116) + 6 };
   }
 
   sightRange(light) {
     const k = clamp((light - 0.35) / 0.65, 0, 1);
-    return lerp(STEALTH.rangeDark, STEALTH.rangeLit, k) * this.alertness * (this.aware ? 1.25 : 1);
+    return lerp(STEALTH.rangeDark, STEALTH.rangeLit, k) * this.alertness * (this.aware ? 1.25 : 1) * (this.torch ? 1.3 : 1);
   }
 
   // Can this man see the point (in front, inside the view angle, nothing in between)?
@@ -495,6 +496,11 @@ export class Enemy {
         } else if (this.state === 'search' || (this.state === 'patrol' && this.wait > 0) || this.state === 'suspicious') pose = A.lookAround(this.clock);
         else if (this.state === 'alert') pose = A.guard(this.clock);
         else pose = A.idle(this.clock, 'man');
+    }
+    // The torch stays level in front of him, whatever the rest of the body does.
+    if (this.torch && !['ko', 'hurt', 'windup', 'strike'].includes(this.state)) {
+      pose.uaF = clamp(pose.uaF, -8, 12);
+      pose.faF = 18 - pose.uaF;
     }
     this.rig.facing = this.facing;
     this.rig.update(pose, b.x, b.y, dt, rate, { vx: b.vx, vy: b.vy, t: this.clock });
